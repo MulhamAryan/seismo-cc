@@ -62,7 +62,18 @@ The subagent cannot write (`disallowedTools`), so the guard never triggers again
 
 ## Installation
 
-### From GitHub
+### From the marketplace (recommended)
+
+The repository **is** a Claude Code marketplace (`.claude-plugin/marketplace.json` at the root). Inside Claude Code:
+
+```
+/plugin marketplace add mulham-aryan/seismo-cc
+/plugin install seismo-cc@seismo-cc
+```
+
+`seismo-cc@seismo-cc` reads as `<plugin>@<marketplace>` — both are named `seismo-cc`. Once installed, everything activates on its own: the `impact-analysis` skill, the `impact-analyst` subagent, the `/seismo-cc:impact` command, the `eonix-impact` MCP server, and the `PreToolUse` guard. Nothing else to wire.
+
+### From GitHub (clone)
 
 ```bash
 git clone https://github.com/mulham-aryan/seismo-cc.git
@@ -76,14 +87,9 @@ claude --plugin-dir ./seismo-cc
 /reload-plugins        # after modifying a component other than a SKILL.md
 ```
 
-### Via a plugin marketplace
+### As an entry in another catalog
 
-`examples/marketplace.json` is the catalog template. In your plugin catalog repo:
-
-```bash
-/plugin marketplace add your-org/plugin-catalog
-/plugin install seismo-cc@your-catalog
-```
+To publish it inside a *different* marketplace repo instead, `examples/marketplace.json` is the catalog template — add an entry whose `source` points at this repo.
 
 ### Per repo
 
