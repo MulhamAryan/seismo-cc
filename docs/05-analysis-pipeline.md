@@ -45,9 +45,9 @@ always sees the report the analysis just wrote, regardless of who triggered it
 
 ### How a run gets triggered inside Claude Code
 
-The user-facing entry points are four slash commands, all delegating to the
-read-only `impact-analyst` subagent — three scoped developer views and one
-business-audience brief over this same pipeline:
+The user-facing entry points are five slash commands, all delegating to the
+read-only `impact-analyst` subagent — three scoped developer views and two
+decision/planning views over this same pipeline:
 
 - `/seismo-cc:impact [symbol|file|--diff]` — the full impact scope.
 - `/seismo-cc:tests [symbol|file|--diff]` — only the affected tests
@@ -56,9 +56,19 @@ business-audience brief over this same pipeline:
 - `/seismo-cc:api-diff [--base <ref>]` — only the breaking public-surface
   changes vs a base, i.e. `apiBreaking` from `computeApiBreaking` (§3, Stage 4);
   conceptually the MCP `get_public_api_diff` query.
-- `/seismo-cc:brief [symbol|file|--diff]` — a business-audience view for analysts
-  and project managers: the agent translates the same assembled `data` (effort,
-  areas, downstream, risk, decision) into plain language, no code.
+- `/seismo-cc:brief [symbol|file|--diff|<spec>]` — a decision view for analysts,
+  PMs and leads: the agent translates the same assembled `data` into plain language
+  (reuse-vs-net-new, complexity estimate, downstream, risk, and the decisions a
+  human must make), no code. Handles a change or a not-yet-built spec.
+- `/seismo-cc:scope [<spec>]` — scopes a not-yet-built feature: extracts the spec's
+  concepts, searches the code for each (via the same `analyze`), and maps them to
+  reusable anchors vs net-new pieces, with the decisions that block the work.
+
+Both `brief` and `scope` deliberately size work by **reuse-vs-net-new**, not
+developer-hours: the code may be written by an agent, so the cost driver is the
+number of net-new subsystems and open decisions, not typing speed. On an empty
+diff (a greenfield spec) they say so plainly instead of reporting a misleading
+"small".
 
 The MCP query tools `get_affected_tests` / `get_public_api_diff` compute those
 same scoped answers **without** persisting, so they never overwrite the gate's

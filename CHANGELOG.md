@@ -60,15 +60,21 @@ follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - **One-line marketplace install.** Ship `.claude-plugin/marketplace.json` at the
   repo root so it installs directly: `/plugin marketplace add MulhamAryan/seismo-cc`
   then `/plugin install seismo-cc@seismo-cc`.
-- **Three extra slash commands.** `/seismo-cc:tests` (affected tests only, structural
+- **Four extra slash commands.** `/seismo-cc:tests` (affected tests only, structural
   + historical), `/seismo-cc:api-diff` (breaking public-surface changes vs a base),
-  and `/seismo-cc:brief` — a **business impact brief for analysts / project
-  managers**: effort size, affected functional areas, downstream teams to notify,
-  risk and required sign-offs, and a recommended decision, in plain language with
-  no code, the *why* narrated by the agent from the same analysis data (no new
-  computation — a business-audience view over the existing `latest.json`). All
-  delegate to the read-only `impact-analyst` subagent, alongside `/seismo-cc:impact`
-  (full scope).
+  `/seismo-cc:brief` (a plain-language business brief for analysts / PMs / leads),
+  and `/seismo-cc:scope` (scope a not-yet-built feature from a spec — map each
+  concept to a reusable anchor found in the code or a net-new piece to build).
+  All delegate to the read-only `impact-analyst` subagent, alongside
+  `/seismo-cc:impact` (full scope). No new computation — audience/planning views
+  over the existing `latest.json`.
+- **Reframed sizing for agent-written code.** `brief` and `scope` no longer imply
+  developer-hours (S/M/L/XL person-days): since the code may be written by an
+  agent, they size work by **reuse-vs-net-new building blocks** plus a labelled
+  complexity estimate, separate **measured** (from `latest.json`) from
+  **estimated** (agent judgment), and surface **the decisions a human must make**.
+  On a greenfield spec (empty diff) they say the work is mostly net-new instead of
+  reporting a misleading "small".
 - **`INSTALL.md`** covering every method: Claude Code marketplace, local plugin dir,
   entry in another catalog, standalone CLI, MCP server, per-repo configuration.
 - **In-depth `docs/`.** Ten grounded documents (architecture, scientific concepts,
