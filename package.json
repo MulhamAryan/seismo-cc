@@ -23,11 +23,11 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/mulham-aryan/seismo-cc.git"
+    "url": "git+https://github.com/MulhamAryan/seismo-cc.git"
   },
-  "homepage": "https://github.com/mulham-aryan/seismo-cc#readme",
+  "homepage": "https://github.com/MulhamAryan/seismo-cc#readme",
   "bugs": {
-    "url": "https://github.com/mulham-aryan/seismo-cc/issues"
+    "url": "https://github.com/MulhamAryan/seismo-cc/issues"
   },
   "files": [
     "bin",

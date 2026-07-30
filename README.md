@@ -67,7 +67,7 @@ The subagent cannot write (`disallowedTools`), so the guard never triggers again
 The repository **is** a Claude Code marketplace (`.claude-plugin/marketplace.json` at the root). Inside Claude Code:
 
 ```
-/plugin marketplace add mulham-aryan/seismo-cc
+/plugin marketplace add MulhamAryan/seismo-cc
 /plugin install seismo-cc@seismo-cc
 ```
 
@@ -76,7 +76,7 @@ The repository **is** a Claude Code marketplace (`.claude-plugin/marketplace.jso
 ### From GitHub (clone)
 
 ```bash
-git clone https://github.com/mulham-aryan/seismo-cc.git
+git clone https://github.com/MulhamAryan/seismo-cc.git
 claude --plugin-dir ./seismo-cc
 ```
 
