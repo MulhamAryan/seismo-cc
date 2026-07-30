@@ -99,7 +99,7 @@ be identified with the **set of files it touches**, $\mathrm{files}(c)$. For a
 file $A$ define:
 
 $$
-\mathrm{support}(A) \;=\; \bigl|\{\, c : A \in \mathrm{files}(c) \,\}\bigr|
+\mathrm{support}(A) \;=\; \left|\lbrace \, c : A \in \mathrm{files}(c) \,\rbrace \right|
 $$
 
 the number of commits in the window that touched $A$. In code this is
@@ -112,7 +112,7 @@ const touching = commits.filter(c => c.files.includes(f));
 For an ordered pair $(A, B)$ define the **co-change count**:
 
 $$
-\mathrm{cochange}(A, B) \;=\; \bigl|\{\, c : A \in \mathrm{files}(c)\ \wedge\ B \in \mathrm{files}(c) \,\}\bigr|
+\mathrm{cochange}(A, B) \;=\; \left|\lbrace \, c : A \in \mathrm{files}(c)\ \wedge\ B \in \mathrm{files}(c) \,\rbrace \right|
 $$
 
 the number of commits that touched **both**. This is the counter accumulated in
@@ -124,7 +124,7 @@ rule $A \Rightarrow B$:
 
 $$
 r(A \to B) \;=\; \frac{\mathrm{cochange}(A, B)}{\mathrm{support}(A)}
-\;=\; \widehat{P}\bigl(B \in c \;\big|\; A \in c\bigr).
+\;=\; \widehat{P}\left(B \in c \;\mid\; A \in c\right).
 $$
 
 It reads as: *"among the commits that touched $A$, what fraction also touched
@@ -370,7 +370,7 @@ number of seed files, and $\bar{m}$ the average number of files per commit.
 So the per-seed cost is $O(C \cdot \bar{m})$ and the whole engine is
 
 $$
-O\!\bigl(C \cdot \bar{m} \cdot S\bigr),
+O\!\left(C \cdot \bar{m} \cdot S\right),
 $$
 
 i.e. linear in **commits × files-per-commit × seeds**. There is no pairwise blowup

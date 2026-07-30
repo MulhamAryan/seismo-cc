@@ -348,13 +348,13 @@ flowchart LR
   C -- yes --> D["# comments"]
   C -- no --> E
   D --> E{"adapter"}
-  E -- cs --> F["interpolated $\" ... {x} ...\"<br/>keep holes"]
-  F --> G["verbatim @\" ... \"<br/>-> empty string"]
+  E -- cs --> F["interpolated $#quot; ... {x} ...#quot;<br/>keep holes"]
+  F --> G["verbatim @#quot; ... #quot;<br/>-&gt; empty string"]
   E -- ts --> H["template ` ... ${x} ...`<br/>keep holes"]
-  G --> I["generic double-quoted -> \"\""]
+  G --> I["generic double-quoted -&gt; #quot;#quot;"]
   H --> I
   E -- other --> I
-  I --> J["generic single-quoted -> ''"]
+  I --> J["generic single-quoted -&gt; ''"]
 ```
 
 The comment at [`lib/scan.js:202`](../lib/scan.js) spells out the C# ordering
@@ -382,7 +382,7 @@ quotes" is deliberate: it means the subsequent generic-string pass won't
 re-match and strip them. The literal text around the holes is discarded; the code
 inside the holes survives to be counted.
 
-Note the hole regexes are single-level (`\{([^{}]+)\}`): they do not handle
+Note the hole regexes are single-level (`\lbrace ([^{}]+)\rbrace `): they do not handle
 nested braces inside an interpolation. That is an accepted approximation —
 nested interpolation is rare, and the failure mode is a *missed* reference (a
 false negative), never a phantom one.

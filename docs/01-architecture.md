@@ -60,7 +60,7 @@ It returns the rendered Markdown so the CLI can echo it without re-rendering. Be
 
 `hashContent(s)` is a SHA-1 of the UTF-8 content (`lib/analyze.js:26-28`). The same function is exported and reused by the CLI's `gate` command (`bin/impact.js:24`), so the hash recorded at analysis time and the hash checked at gate time are computed identically. In LaTeX terms, for a covered file $f$ the guard admits an edit only when
 
-$$\mathrm{sha1}\big(\text{content}_{\text{now}}(f)\big) = \text{fileHashes}[f],$$
+$$\mathrm{sha1}\left(\text{content}_{\text{now}}(f)\right) = \text{fileHashes}[f],$$
 
 i.e. the report still describes the file's current bytes.
 

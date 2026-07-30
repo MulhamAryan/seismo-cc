@@ -27,19 +27,57 @@ follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   inflated on merge-heavy histories.
 
 ### Added
+- **MCP transport (`seismo-impact`).** A zero-dependency stdio JSON-RPC 2.0 server
+  over the same engine, exposing four tools: `get_blast_radius` (the only one that
+  persists `.impact/latest.json` and feeds the gate), `get_affected_tests`,
+  `get_public_api_diff`, `get_irreversible_ops` (advisory queries that never
+  overwrite coverage). Declared in `.claude-plugin/plugin.json`.
+- **One-line marketplace install.** Ship `.claude-plugin/marketplace.json` at the
+  repo root so it installs directly: `/plugin marketplace add MulhamAryan/seismo-cc`
+  then `/plugin install seismo-cc@seismo-cc`.
+- **`INSTALL.md`** covering every method: Claude Code marketplace, local plugin dir,
+  entry in another catalog, standalone CLI, MCP server, per-repo configuration.
+- **In-depth `docs/`.** Ten grounded documents (architecture, scientific concepts,
+  formal mathematical model with equations, algorithms and complexity, analysis
+  pipeline, risk model, git historical coupling, configuration reference,
+  limitations and validity) plus an index; every claim cites `file:line`.
 - **.NET-focused resolution.** Ambiguous symbols (multiple declarations across
   namespaces) are detected and flagged instead of silently merged; namespace-aware
   `namespaceAt`; `stripNoise` handles C# verbatim (`@"…"`) and interpolated
   (`$"…{expr}…"`) strings and TypeScript template literals, keeping interpolation
   expressions while dropping literal text; C# declaration regexes now catch
   `private` methods, expression-bodied members and attributed methods.
-- English throughout (report output, risk labels, CLI, hook messages, docs).
+- **Qualified-reference confidence for non-.NET stacks.** For PHP/Kotlin/TypeScript
+  the reference search builds a small import graph and tags each caller `high` /
+  `normal` / `low` (exact import path, same module, or qualified call site vs. a
+  same-named symbol imported from another module). Additive — raw counts feeding
+  the risk score are unchanged.
+- **Public API before/after diff (`apiBreaking`).** In diff mode with a base, the
+  engine diffs the public surface against the merge base and reports only breaking
+  changes (`removed` / `changed`); additions are excluded by contract.
+- **Advisory prior-incident memory (`priorHints`).** Optional, off by default
+  (`memoryPath`). Annotates symbols/files with past incidents; computed after risk
+  and never fed back, so the gate stays deterministic. Fed via
+  `impact record --file … --ref …` or `--from-reverts` (git `post-merge` hook),
+  idempotent, degrades gracefully when unset.
+- **Cross-repo sibling scan.** Optional `--workspace` name search across sibling
+  repos surfaces consumer repos the in-repo graph cannot see.
+- **Configurable analyst model.** `agents/impact-analyst.md` declares `model: sonnet`
+  as the default (mechanical read-and-format work); the user can override it per
+  prompt (e.g. "use haiku"), honored via the Task model override.
+- English throughout (report output, risk labels, CLI, hook messages, tests, shell
+  scripts, docs).
 
 ### Changed
 - Risk-level values are now `low` / `moderate` / `high` / `blocking`.
 - README documents per-stack support with .NET as the first-class target;
   PHP/Laravel, Kotlin and TypeScript are best-effort; git coupling is
   language-agnostic.
+- Anonymized all examples to a neutral sample domain (`Checkout`/`Order`,
+  `sample-service`); test fixture and smoke suite renamed to match.
+- `test/smoke.sh` made portable on Windows/git-bash (POSIX paths converted for
+  node inside `-e` literals and JSON payloads); 102 assertions pass locally,
+  unchanged on Linux CI.
 
 ## [0.1.0]
 - Initial engine (zero-dependency Node CLI), analyst subagent, impact-analysis

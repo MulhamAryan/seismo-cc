@@ -85,13 +85,13 @@ The formal treatment of these sets and edges is developed in [03-mathematical-mo
 
 ## 3. Reachability vs. direct neighbours
 
-**Definition.** In graph terms, the *sound* impact set of a change to vertex $v$ is (an over-approximation of) the set of vertices that can **reach** $v$ — the transitive closure of the dependency relation. If $A$ calls $B$ and $B$ calls $C$, then a change to $C$ can ripple to $B$ and then to $A$: the reachable set of $C$ under the "is-called-by" relation is $\{B, A, \dots\}$, computed by a transitive traversal (BFS/DFS) over $G$.
+**Definition.** In graph terms, the *sound* impact set of a change to vertex $v$ is (an over-approximation of) the set of vertices that can **reach** $v$ — the transitive closure of the dependency relation. If $A$ calls $B$ and $B$ calls $C$, then a change to $C$ can ripple to $B$ and then to $A$: the reachable set of $C$ under the "is-called-by" relation is $\lbrace B, A, \dots\rbrace $, computed by a transitive traversal (BFS/DFS) over $G$.
 
 The **direct neighbours** of $v$ are only the vertices one edge away — its immediate predecessors (direct callers, *fan-in*) or successors (direct callees, *fan-out*).
 
 **What seismo-cc realizes.** `seismo-cc` computes **direct callers only — approximately one hop of $E_{\text{ref}}$, and it does not traverse further.** For each symbol, `analyze.js` calls `scan.references` exactly once and stops. There is no work-list, no recursion, no transitive closure over the reference relation. Formally it computes
 
-$$\text{callers}(s) = \{\, f \in F : f \rightarrow s \in E_{\text{ref}},\ f \neq \text{declFile}(s) \,\}$$
+$$\text{callers}(s) = \lbrace \, f \in F : f \rightarrow s \in E_{\text{ref}},\ f \neq \text{declFile}(s) \,\rbrace $$
 
 and the `callSites` counter is $\sum_{f} \lvert \text{distinct-lines}(f, s)\rvert$ — a fan-in count, not a reachable-set size. It does **not** then take those caller files, extract *their* symbols, and search for *their* callers. So if `A` references `B` and `B` references `C`, changing `C` surfaces `B` but never automatically surfaces `A`.
 
@@ -137,7 +137,7 @@ The `confidence` machinery is *additive* — it annotates and re-orders ties but
 
 The association-rule view: from the transaction database of commits (each commit = a set of files changed together), mine rules $A \Rightarrow B$ with two standard measures:
 
-$$\text{support}(A \Rightarrow B) = \frac{\lvert \{c : A \in c \wedge B \in c\} \rvert}{\lvert \text{commits} \rvert}, \qquad \text{confidence}(A \Rightarrow B) = \frac{\lvert \{c : A \in c \wedge B \in c\} \rvert}{\lvert \{c : A \in c\} \rvert}.$$
+$$\text{support}(A \Rightarrow B) = \frac{\lvert \lbrace c : A \in c \wedge B \in c\rbrace  \rvert}{\lvert \text{commits} \rvert}, \qquad \text{confidence}(A \Rightarrow B) = \frac{\lvert \lbrace c : A \in c \wedge B \in c\rbrace  \rvert}{\lvert \lbrace c : A \in c\rbrace  \rvert}.$$
 
 Confidence is exactly the conditional probability $P(B \in c \mid A \in c)$ — *given that a commit touched $A$, how often did it also touch $B$?*
 
@@ -149,7 +149,7 @@ const touching = commits.filter(c => c.files.includes(f));   // commits containi
 const ratio = n / touching.length;                           // n = commits containing A AND B
 ```
 
-so `ratio` $= n / \lvert\{c : f \in c\}\rvert = P(\text{other} \mid f) = \text{confidence}(f \Rightarrow \text{other})$. The tool keeps a rule only if it clears two thresholds (defaults, configurable per repo):
+so `ratio` $= n / \lvert\lbrace c : f \in c\rbrace \rvert = P(\text{other} \mid f) = \text{confidence}(f \Rightarrow \text{other})$. The tool keeps a rule only if it clears two thresholds (defaults, configurable per repo):
 
 - $n \ge$ `minCommits` (default 3) — a minimum **support count**, so a single coincidental co-edit is discarded;
 - `ratio` $\ge$ `minRatio` (default 0.4) — a minimum **confidence**.

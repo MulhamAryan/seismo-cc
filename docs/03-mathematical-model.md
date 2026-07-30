@@ -89,14 +89,14 @@ For a symbol $v$ with declaring file $\mathrm{decl}(v)$, define the set of
 **referencing files**
 
 $$
-R(v) \;=\; \bigl\{\, f \in V_{\mathrm{file}} \;:\; f \xrightarrow{\mathrm{ref}} v \,\bigr\},
+R(v) \;=\; \left\lbrace\, f \in V_{\mathrm{file}} \;:\; f \xrightarrow{\mathrm{ref}} v \,\right\rbrace,
 $$
 
 and the **file fan-in** as its cardinality restricted to files other than the
 declaration site:
 
 $$
-\mathrm{FanIn}(v) \;=\; \bigl|\{\, f \in R(v) \;:\; f \neq \mathrm{decl}(v) \,\}\bigr|.
+\mathrm{FanIn}(v) \;=\; \left|\lbrace \, f \in R(v) \;:\; f \neq \mathrm{decl}(v) \,\rbrace \right|.
 $$
 
 In code this is `external.length`, where `external = refs.filter(r => r.file !== declFile)`
@@ -123,7 +123,7 @@ by `stripNoise`, `lib/scan.js:194-219`). Let
 Then the two counters attached to each hit are
 
 $$
-\mathrm{count}(v, f) = \bigl|\mathrm{Lines}(v, f)\bigr|, \qquad
+\mathrm{count}(v, f) = \left|\mathrm{Lines}(v, f)\right|, \qquad
 \mathrm{occurrences}(v, f) = \mathrm{occ}(v, f),
 $$
 
@@ -169,8 +169,8 @@ $$
 ## 3. Reference confidence tiers
 
 Because resolution is name-based (no compiler, no type graph), each referencing
-file is tagged with a confidence in $\{\textsf{high}, \textsf{normal},
-\textsf{low}\}$. The tier annotates the hit; it does **not** alter `count`
+file is tagged with a confidence in $\lbrace \textsf{high}, \textsf{normal},
+\textsf{low}\rbrace $. The tier annotates the hit; it does **not** alter `count`
 (`lib/scan.js:225-227` design note: *"raw count stays unchanged"*). It is used
 only as a tie-breaker at equal count in the sort (`lib/scan.js:409-410`).
 
@@ -190,7 +190,7 @@ $M_{\mathrm{decl}} = \mathrm{moduleOf}(\mathrm{decl}(v))$ (namespace/package;
   \,\wedge\, M_{\mathrm{decl}} \neq \texttt{null} \,\wedge\, \neg\,\mathsf{importHere}$
   — $f$ imports a **homonym from another module** (`lib/scan.js:361`).
 - $\mathsf{fileImports}(f,v) \;\equiv\; \mathsf{importHere} \,\vee\,
-  \bigl(\mathrm{impPath} = \texttt{null} \,\wedge\, v \in \mathrm{importedNames}(f)\bigr)$
+  \left(\mathrm{impPath} = \texttt{null} \,\wedge\, v \in \mathrm{importedNames}(f)\right)$
   (`lib/scan.js:363`).
 - $\mathsf{sameModule}(f,v) \;\equiv\; M_{\mathrm{decl}} \neq \texttt{null}
   \,\wedge\, \mathrm{moduleOf}(f) = M_{\mathrm{decl}}$ (`lib/scan.js:364`).
@@ -235,14 +235,14 @@ Fix the history window to the last $D$ commits (`gitDepth`). For a **seed file**
 $A$ define its **support** — the number of window commits touching $A$:
 
 $$
-\mathrm{support}(A) \;=\; \bigl|\{\, c \in \mathcal{C} \;:\; A \in \mathrm{files}(c) \,\}\bigr|
+\mathrm{support}(A) \;=\; \left|\lbrace \, c \in \mathcal{C} \;:\; A \in \mathrm{files}(c) \,\rbrace \right|
 \qquad(\text{`touching`, `lib/git.js:87`}).
 $$
 
 For another file $B$ define the **co-change count**:
 
 $$
-\mathrm{cochange}(A, B) \;=\; \bigl|\{\, c \in \mathcal{C} \;:\; A \in \mathrm{files}(c) \,\wedge\, B \in \mathrm{files}(c) \,\}\bigr|
+\mathrm{cochange}(A, B) \;=\; \left|\lbrace \, c \in \mathcal{C} \;:\; A \in \mathrm{files}(c) \,\wedge\, B \in \mathrm{files}(c) \,\rbrace \right|
 \qquad(\text{`counts`, `lib/git.js:89-95`}).
 $$
 
@@ -257,7 +257,7 @@ association rule $A \Rightarrow B$ in market-basket terms, i.e. the empirical
 conditional frequency
 
 $$
-r(A \to B) \;=\; \widehat{P}\!\left(B \in \mathrm{files}(c) \;\middle|\; A \in \mathrm{files}(c)\right),
+r(A \to B) \;=\; \widehat{P}\!\left(B \in \mathrm{files}(c) \;\mid\; A \in \mathrm{files}(c)\right),
 $$
 
 the maximum-likelihood estimate of the probability that a commit touches $B$
@@ -319,11 +319,11 @@ The result list is sorted by ratio descending, ties broken by co-change count
 descending (`lib/git.js:104`):
 
 $$
-(B_1, B_2, \dots) \ \text{ordered by}\ \bigl(r(A \to B),\ \mathrm{cochange}(A,B)\bigr)\ \text{lexicographically, descending.}
+(B_1, B_2, \dots) \ \text{ordered by}\ \left(r(A \to B),\ \mathrm{cochange}(A,B)\right)\ \text{lexicographically, descending.}
 $$
 
 > **Churn** (`churn`, `lib/git.js:153-156`) is a related but separate scalar:
-> $\mathrm{churn}(f) = \bigl|\{\text{window commits touching } f\}\bigr|$, computed
+> $\mathrm{churn}(f) = \left|\lbrace \text{window commits touching } f\rbrace \right|$, computed
 > with a pathspec'd `git log ... -- file`. It equals $\mathrm{support}(f)$
 > conceptually but is obtained by an independent command and is reported as a
 > stability hint; it does not enter the risk formula.
@@ -338,7 +338,7 @@ Two rule families feed risk. Both are regex families over noise-stripped content
 ### 5.1 Irreversible operations and their weights
 
 Each rule $\rho \in \mathrm{IRREVERSIBLE}$ carries a weight
-$w(\rho) \in \{1,\dots,5\}$ (`lib/config.js:42-55`). `irreversible`
+$w(\rho) \in \lbrace 1,\dots,5\rbrace $ (`lib/config.js:42-55`). `irreversible`
 (`lib/rules.js:10-50`) scans both the file contents and the diff text (a removed
 line matters as much as an added one, `lib/rules.js:5-9`), deduplicating by
 `(rule id, location)` (`lib/rules.js:14-19`). The quantity that reaches risk is
@@ -370,7 +370,7 @@ finding per rule that matched**. The scalar consumed by risk is the number of
 such findings across inspected files (`lib/analyze.js:242`):
 
 $$
-\mathrm{apiSurface} \;=\; \bigl|\{\, \text{surface findings over inspected files} \,\}\bigr|
+\mathrm{apiSurface} \;=\; \left|\lbrace \, \text{surface findings over inspected files} \,\rbrace \right|
 = \texttt{api.length}.
 $$
 
@@ -384,7 +384,7 @@ endpoint strings.
 Risk is a value on the totally ordered four-element lattice
 
 $$
-\mathcal{L} \;=\; \bigl(\{\,\textsf{low} < \textsf{moderate} < \textsf{high} < \textsf{blocking}\,\}, \ \le\bigr),
+\mathcal{L} \;=\; \left(\lbrace \,\textsf{low} < \textsf{moderate} < \textsf{high} < \textsf{blocking}\,\rbrace , \ \le\right),
 $$
 
 with join $\vee = \max_{\mathcal{L}}$. `riskLevel` (`lib/rules.js:120-154`)
@@ -483,7 +483,7 @@ For a file $f$ with current content $\mathrm{content}(f)$, the fingerprint is th
 SHA-1 of its UTF-8 bytes (`hashContent`, `lib/analyze.js:26-28`):
 
 $$
-h(f) \;=\; \mathrm{SHA\text{-}1}\bigl(\mathrm{content}(f)\bigr).
+h(f) \;=\; \mathrm{SHA\text{-}1}\left(\mathrm{content}(f)\right).
 $$
 
 At analysis time, `run` records $h(f)$ for every file the gate may later consider
@@ -499,7 +499,7 @@ be $f$'s repo-relative path, $t_{\mathrm{gen}}$ the report's `generatedAt`
 timestamp, and
 
 $$
-\mathrm{Scope} \;=\; \mathrm{changedFiles} \,\cup\, \{\mathrm{declFile}(s)\}_s \,\cup\, \{\text{topCallers}\} \,\cup\, \{\text{coupling files}\}
+\mathrm{Scope} \;=\; \mathrm{changedFiles} \,\cup\, \lbrace \mathrm{declFile}(s)\rbrace _s \,\cup\, \lbrace \text{topCallers}\rbrace  \,\cup\, \lbrace \text{coupling files}\rbrace 
 \qquad(\text{`bin/impact.js:111-116`}).
 $$
 
