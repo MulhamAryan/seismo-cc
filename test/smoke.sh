@@ -11,6 +11,15 @@ IMPACT="node $PLUGIN_ROOT/bin/impact.js"
 WS="/tmp/seismo-cc-fixture"
 API="$WS/sample-service"
 
+# Path handed to node INSIDE a string (a `node -e` literal or a JSON payload)
+# is not mangled by MSYS/git-bash the way a bare argv is, so a POSIX path like
+# /d/... or /tmp/... reaches node unconverted and fails on Windows. cygpath -m
+# yields the mixed form (D:/...) that node accepts and that is JSON-safe
+# (forward slashes need no escaping). No-op on Linux/macOS where cygpath is absent.
+towin() { cygpath -m "$1" 2>/dev/null || printf '%s' "$1"; }
+PRW="$(towin "$PLUGIN_ROOT")"
+APIW="$(towin "$API")"
+
 PASS=0; FAIL=0
 
 ok()   { printf '  \033[32mok\033[0m   %s\n' "$1"; PASS=$((PASS+1)); }
@@ -44,7 +53,7 @@ echo
 echo "-> 2. report written to disk"
 [ -f .impact/report.md ]   && ok "report.md created"   || ko "report.md created" "file present" "absent"
 [ -f .impact/latest.json ] && ok "latest.json created" || ko "latest.json created" "file present" "absent"
-JSONOK=$(node -e "const d=require('$API/.impact/latest.json'); console.log(d.risk.level && d.symbols.length ? 'ok':'ko')" 2>&1)
+JSONOK=$(node -e "const d=require('$APIW/.impact/latest.json'); console.log(d.risk.level && d.symbols.length ? 'ok':'ko')" 2>&1)
 have "latest.json usable" "ok" "$JSONOK"
 REP=$(cat .impact/report.md)
 have "textual confidence label"       "confidence: textual"     "$REP"
@@ -78,14 +87,17 @@ rc_is "no report -> blocks"           "1" "$?"
 echo
 echo "-> 6. PreToolUse hook (Claude Code contract)"
 $IMPACT analyze --symbols Checkout >/dev/null 2>&1
-mkjson() { printf '{"cwd":"%s","hook_event_name":"PreToolUse","tool_name":"%s","tool_input":{"file_path":"%s"}}' "$API" "$2" "$1"; }
+# cwd and file_path go inside a JSON payload, so they must be the node-friendly
+# mixed form (see towin above); the hook reads them with fs.
+mkjson() { printf '{"cwd":"%s","hook_event_name":"PreToolUse","tool_name":"%s","tool_input":{"file_path":"%s"}}' "$APIW" "$2" "$(towin "$1")"; }
 
 mkjson "$API/src/Domain/Checkout.cs" Edit | node "$PLUGIN_ROOT/hooks/impact-gate.js" >/dev/null 2>&1
 rc_is "covered -> exit 0"             "0" "$?"
 ERR=$(mkjson "$API/app/Http/Controllers/PartnerController.php" Edit | node "$PLUGIN_ROOT/hooks/impact-gate.js" 2>&1 >/dev/null)
 rc_is "not covered -> exit 2"         "2" "$?"
 have "anti-stop message present"      "not a user refusal"                 "$ERR"
-have "plugin path resolved"           "$PLUGIN_ROOT/bin/impact.js"         "$ERR"
+# Separator-agnostic: the hook may print the path with / or \ depending on OS.
+have "plugin path resolved"           "bin.impact\.js"                     "$ERR"
 mkjson "$API/README.md" Write | node "$PLUGIN_ROOT/hooks/impact-gate.js" >/dev/null 2>&1
 rc_is "unguarded extension -> exit 0" "0" "$?"
 mkjson "$API/src/Domain/New.cs" Write | node "$PLUGIN_ROOT/hooks/impact-gate.js" >/dev/null 2>&1
@@ -104,7 +116,7 @@ have "unknown symbol: clean output" "Impact LOW" "$OUT"
 echo
 echo "-> 8. plugin structure"
 for f in .claude-plugin/plugin.json hooks/hooks.json examples/marketplace.json impact.config.example.json; do
-  node -e "JSON.parse(require('fs').readFileSync('$PLUGIN_ROOT/$f','utf8'))" >/dev/null 2>&1 \
+  node -e "JSON.parse(require('fs').readFileSync('$PRW/$f','utf8'))" >/dev/null 2>&1 \
     && ok "JSON valid: $f" || ko "JSON valid: $f" "parsable" "parse error"
 done
 for f in agents/impact-analyst.md skills/impact-analysis/SKILL.md commands/impact.md; do
@@ -155,7 +167,7 @@ echo
 echo "-> 10. freshness by content fingerprint (Phase 2+3)"
 cd "$API"
 $IMPACT analyze --symbols Checkout >/dev/null 2>&1
-HASHOK=$(node -e "const d=require('$API/.impact/latest.json'); const h=d.fileHashes||{}; console.log(h['src/Domain/Checkout.cs'] ? 'ok':'ko')" 2>&1)
+HASHOK=$(node -e "const d=require('$APIW/.impact/latest.json'); const h=d.fileHashes||{}; console.log(h['src/Domain/Checkout.cs'] ? 'ok':'ko')" 2>&1)
 have "fingerprints recorded in latest.json" "ok" "$HASHOK"
 $IMPACT gate --file src/Domain/Checkout.cs >/dev/null 2>&1
 rc_is "content unchanged -> passes"     "0" "$?"
