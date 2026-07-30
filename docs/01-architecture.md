@@ -199,13 +199,13 @@ The plugin bundles five activation surfaces, each triggered differently:
 | **PreToolUse hook** | `hooks/hooks.json` → `hooks/impact-gate.js` | Fires automatically on every `Edit\|Write\|MultiEdit` tool call, 30 s timeout (`hooks.json:3-14`). Deterministic; no model involvement. |
 | **Skill** | `skills/impact-analysis/SKILL.md` | Model-invoked by description match: it decides *when* to request analysis and *what to do with the verdict* (it does not analyze itself). Maps risk → action and tells the agent how to react when the guard blocks. |
 | **Subagent** | `agents/impact-analyst.md` | Read-only analyst (tools restricted to Read/Grep/Glob/Bash, write tools disallowed, `model: sonnet`). Launched via the Task tool so that reading many call sites burns *its* context, not the main session's. Runs the CLI `analyze --short` and reports ~15 dense lines in a fixed format. |
-| **Slash commands** | `commands/*.md` | Four manual entry points, all delegating to the `impact-analyst` subagent: `/seismo-cc:impact [symbol\|file\|--diff]` (full scope, defaulting to the current diff vs `origin/main` when no argument is given), `/seismo-cc:tests [symbol\|file\|--diff]` (only the affected tests, each labelled `structural`/`historical`), `/seismo-cc:api-diff [--base <ref>]` (only the breaking public-surface changes vs a base), and `/seismo-cc:brief [symbol\|file\|--diff]` (a business impact brief for analysts / PMs — effort, areas, downstream, risk, decision — in plain language, no code, with the *why* narrated by the agent from the same analysis data). |
+| **Slash commands** | `commands/*.md` | Five manual entry points, all delegating to the `impact-analyst` subagent. Three scoped developer views: `/seismo-cc:impact [symbol\|file\|--diff]` (full scope, defaulting to the current diff vs `origin/main`), `/seismo-cc:tests [symbol\|file\|--diff]` (only affected tests), `/seismo-cc:api-diff [--base <ref>]` (only breaking public-surface changes). Two decision/planning views that assume the code may be written by an agent and therefore size work by reuse-vs-net-new, not developer-hours: `/seismo-cc:brief [symbol\|file\|--diff\|<spec>]` (a plain-language business brief — reuse-vs-net-new, complexity estimate, downstream, risk, and the decisions a human must make; handles a change or a not-yet-built spec) and `/seismo-cc:scope [<spec>]` (maps each concept of a not-yet-built feature to a reusable anchor found in the code or a net-new piece to build, with the decisions that block the work). |
 
 The layering is intentional: the **hook** is the hard, deterministic floor (an edit is physically blocked without a fresh covering report); the **skill** and **subagent** are the soft, model-facing layer that guides the agent to produce that report *before* it hits the floor and to interpret the verdict honestly. The MCP `get_blast_radius` tool and the CLI `analyze` command are the two ways the covering artifact gets written; everything else reads it.
 
 ### 6.1 Surfaces — when each is used
 
-The same engine is reachable through several surfaces; what differs is the trigger and who invokes it. The four slash commands are views over the same analysis — three scoped developer views (full scope / tests only / breaking-change only) and one business-audience brief (`/seismo-cc:brief`) — all delegating to the read-only subagent.
+The same engine is reachable through several surfaces; what differs is the trigger and who invokes it. The five slash commands are views over the same analysis — three scoped developer views (full scope / tests only / breaking-change only) and two decision/planning views (`/seismo-cc:brief`, `/seismo-cc:scope`) that frame the work as reuse-vs-net-new rather than developer-hours — all delegating to the read-only subagent.
 
 | Surface | Triggered when | Invoked by |
 |---|---|---|
@@ -214,7 +214,8 @@ The same engine is reachable through several surfaces; what differs is the trigg
 | `/seismo-cc:impact [symbol\|file\|--diff]` | manual request for the full impact scope | the user |
 | `/seismo-cc:tests [symbol\|file\|--diff]` | manual request for only the affected tests | the user |
 | `/seismo-cc:api-diff [--base <ref>]` | manual request for only breaking public-surface changes vs a base | the user |
-| `/seismo-cc:brief [symbol\|file\|--diff]` | manual request for a business impact brief (analyst / PM audience, no code) | the user |
+| `/seismo-cc:brief [symbol\|file\|--diff\|<spec>]` | manual request for a business impact brief (analyst / PM / lead; reuse-vs-net-new, decisions; no code) | the user |
+| `/seismo-cc:scope [<spec>]` | manual request to scope a not-yet-built feature (reusable anchors vs net-new, blocking decisions) | the user |
 | PreToolUse hook (gate) | every `Edit`/`Write`/`MultiEdit` on a guarded file | automatically (blocks if no fresh covering report) |
 | MCP `get_blast_radius` | the agent needs the full scope and to persist coverage for the gate | the agent (only MCP tool that writes the report) |
 | MCP `get_affected_tests` / `get_public_api_diff` / `get_irreversible_ops` | the agent needs a scoped, advisory answer without persisting | the agent |

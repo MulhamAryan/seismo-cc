@@ -1,72 +1,78 @@
 ---
-description: Business-oriented impact brief for analysts / project managers — effort, risk, downstream teams and a recommended decision, in plain language, no code
-argument-hint: [symbol|file|--diff]
+description: Business impact brief for analysts / PMs / leads — reuse vs net-new, complexity, downstream, risk and the decisions a human must make. Plain language, no code. Works for a change OR a not-yet-built spec.
+argument-hint: [symbol|file|--diff|<spec text>]
 allowed-tools: Bash, Read, Grep, Glob
 ---
 
 Impact brief requested on: $ARGUMENTS
 
-Produce an **impact brief for a non-technical reader** (analyst, project manager, lead). This is not the developer report: **no file paths, no `file:line`, no symbol names, no regex, no code**. Translate the analysis into their language — scope, effort, risk, who is affected, and what decision is needed — and, above all, **explain the *why* in plain prose**. The numbers are facts; your job is to make them mean something.
+Produce an **impact brief for a decision-maker** (analyst, project manager, lead). Not the developer report: **no file paths, no `file:line`, no symbol names, no regex, no code**. The reader decides and approves; they do not type the code — an agent may. So frame everything around **what has to be built vs reused**, **what is risky**, and **what a human must decide** — not around developer-hours.
 
-## Step 1 — get a fresh analysis (do not invent numbers)
+## Step 0 — is this a change, or a not-yet-built spec?
 
-Delegate to the `impact-analyst` subagent, or run it yourself, so that `.impact/latest.json` exists and covers the target. If `$ARGUMENTS` is empty, analyze the current diff against `origin/main`.
+- If `$ARGUMENTS` names an existing symbol / file, or is `--diff` → **change mode**.
+- If `$ARGUMENTS` is a feature description (a spec, several sentences) → **greenfield mode**: nothing is built yet, so the diff is empty and the tool's risk/caller numbers will be ~zero. **Do not report a misleadingly small size from that.** Instead size the work by how many building blocks must be built vs reused (Step 2b).
+
+## Step 1 — get grounded data (never invent numbers)
+
+Delegate to the `impact-analyst` subagent, or run it yourself.
+
+- **Change mode:** analyze the target (or the current diff vs `origin/main` if empty).
+- **Greenfield mode:** extract the concrete concepts from the spec — the entities, screens, modules and integrations it names (e.g. "candidate status", "documents module", "internal messaging", "photo", "loge tags") — and search the codebase for each, so every claim is grounded, not guessed:
 
 ```bash
-node "${CLAUDE_PLUGIN_ROOT}/bin/impact.js" analyze --symbols <A,B> --json
-node "${CLAUDE_PLUGIN_ROOT}/bin/impact.js" analyze --diff --base origin/main --json
+node "${CLAUDE_PLUGIN_ROOT}/bin/impact.js" analyze --symbols <Concept1,Concept2,…> --json
 ```
 
-Then **read `.impact/latest.json`**. Every figure in your brief must come from that file — never guess. Fields you will use: `risk`, `summary`, `symbols`, `topCallers`, `indirect`, `coupling`, `apiSurface`, `apiBreaking`, `irreversible`, `tests`, `crossRepo`, `externalConsumers`, `priorHints`, `changedFiles`.
+Read `.impact/latest.json`. A concept whose symbol resolves (has a `declFile` / callers) is a **reusable anchor**; a concept that does not resolve anywhere is **net-new** (say so, and flag it "to confirm with someone who knows the screens" — reflection/ORM-by-name can hide a real anchor).
 
-## Step 2 — derive the business framing from the data
+## Step 2 — separate what the tool MEASURED from what you ESTIMATE
 
-- **Affected areas.** Group the impacted files (`changedFiles`, the caller files in `topCallers`, and `indirect`) by their top one or two path segments (e.g. `src/Billing/…` → "Billing"). Report the list of *functional areas* touched and how many files in each — never the file list itself.
-- **Effort / size.** Give a T-shirt size and justify it from scope, not vibes:
-  - **XL** if `risk.level` is `blocking`;
-  - **L** if `risk.level` is `high`, or `summary.callers >= 40`, or `crossRepo` is non-empty;
-  - **M** if `risk.level` is `moderate`, or `summary.callers >= 15`, or `apiSurface` is non-empty;
-  - **S** otherwise.
-  State the driver ("L — a public contract changes and 3 downstream repos consume it"), and add the **testing load** (`tests.length` tests to run first) as part of the effort.
-- **Downstream / teams.** From `crossRepo` and `externalConsumers`, name the consumer repos/services and, if a contact is declared, who to notify. This is the information nobody else can surface — lead with it when it exists.
-- **Risk & required sign-offs.** From `irreversible`, translate each item into a business consequence in prose: destructive migration → *possible data loss, not reversible by a rollback of code*; payment/billing → *money movement*; email → *messages already sent cannot be recalled*; auth change → *access-control surface*. From `apiBreaking`, say *an existing public contract changes, so external consumers break unless updated*. If `risk.level` is `blocking`, state clearly that **human validation is required before deploy** and there is no override.
-- **History.** If `priorHints` is non-empty, mention that this area has caused past incidents — a reason for extra care — while noting it is advisory context, not a verdict.
+State this split explicitly in the brief. It is the whole point of being honest:
 
-## Step 3 — write the brief
+- **Measured (deterministic, from `latest.json`):** callers, coupling, public surface, breaking changes, irreversible operations, cross-repo consumers, which concepts resolve in the code.
+- **Estimated (your judgment):** the build size, the reuse-vs-net-new split, feasibility calls. Label these as estimates to confirm — never present them as tool output.
 
-Structure it exactly like this, in prose (short paragraphs, not code):
+## Step 2b — size the work with BOTH scales
+
+Give both, side by side, so the reader sees the shape:
+
+1. **Build scope (grounded):** `X reusable anchors / Y net-new pieces / Z infeasible-or-needs-a-decision`, listing what each is in plain words.
+2. **Complexity (estimate):** **Low / Medium / High** — High if ≥3 net-new subsystems or a hard feasibility/legal blocker; Medium if 1–2 net-new; Low if mostly reuse. Mark it "estimate, to confirm".
+
+Do **not** translate this into developer-days: whether a human or an agent writes the code, the cost driver is the number of net-new subsystems and the decisions, not typing speed.
+
+## Step 3 — write the brief (prose, one screen)
 
 ```
-Impact brief — <what is being changed, in plain words>
+Impact brief — <what is being proposed, in plain words>
 
-Bottom line: <RISK in plain terms> · Effort: <S/M/L/XL> · <one-sentence decision>
+Bottom line: <risk in plain terms> · Build scope: <X reuse / Y net-new> · Complexity: <Low/Med/High, estimate> · <one-sentence decision>
 
-Why this size / this risk
-<2–4 sentences explaining the drivers in human language: what areas it reaches,
-why it is or isn't big, what makes it risky or safe. This is the heart of the
-brief — be specific and causal, not a list of numbers.>
+Why this shape
+<2–4 sentences: what already exists to build on, what is genuinely new, what makes
+it risky or safe. The value is the causal why, in human language.>
 
-Areas affected
-<functional areas + counts, e.g. "Billing (4 files), Orders (2), Notifications (1)">
+Reusable vs net-new (grounded)
+<the anchors found in the code, and the pieces that must be built from scratch>
 
 Downstream & who to notify
-<consumer repos / external consumers / contacts, or "none detected in scope">
+<consumer repos / external consumers / contacts, or "none detected">
 
-Risk & sign-offs
-<business consequences of the irreversible / breaking items, and whether human
-validation is required before deploy>
-
-Tests to cover it
-<how many priority tests, and that the full suite is still required before merge>
+Risk & what a human must decide
+<business consequences (data loss, money, emails, personal/sensitive data, legal),
+plus the calls only a human should make: architecture, feasibility (e.g. "web
+cannot truly block screenshots — dissuasion only"), and any reuse assumption in the
+spec that the code does NOT confirm.>
 
 Recommended decision
-<go and implement · announce the scope first · lay out two options and let a human
-choose · do not proceed without validation — in one or two sentences, in their words>
+<go / announce scope first / decide the open questions before estimating / do not
+proceed without validation — one or two sentences.>
 ```
 
 ## Rules
 
-- **Plain language, causal.** The value is the *why*, narrated for someone who does not read code. "This reaches Billing and two downstream services, and it changes a public API those services call — so it is medium-to-large and the mobile team must be told before release" beats any table.
-- **Honesty about confidence.** Say "the analysis indicates" / "the report identifies", never "there are". Mention that indirect impact and name-based matches are heuristic, and that the analysis reduces uncertainty but does not replace running the tests.
-- **Ground every number in `latest.json`.** If the data is empty (no symbol resolved, no history), say so plainly — an empty scope is itself information for an estimate.
-- **Keep it short.** A brief is one screen. If it runs longer than ~25 lines, you are listing instead of explaining.
+- **Plain, causal language.** Explain the *why* for someone who does not read code.
+- **Honesty about confidence.** "The analysis indicates / the report identifies", never "there are". Name-based search and greenfield concept matching are heuristic; the analysis reduces uncertainty, it does not replace building and testing.
+- **Empty scope is information.** A spec with no existing code to change is not "small" — say plainly it is mostly net-new, and size it by the building blocks.
+- Keep it to one screen.

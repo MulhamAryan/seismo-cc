@@ -6,7 +6,7 @@ Impact analysis before modification. The plugin provides the following component
 |---|---|
 | `agents/impact-analyst.md` | **read-only subagent** — runs the analysis in its own context and returns ~15 lines |
 | `skills/impact-analysis/` | teaches the main agent **when** to delegate and **what to do** with the verdict |
-| `commands/*.md` | four slash commands for manual invocation — `/seismo-cc:impact` (full scope), `/seismo-cc:tests` (affected tests only), `/seismo-cc:api-diff` (breaking public-surface changes only), `/seismo-cc:brief` (business impact brief for analysts / PMs, no code) |
+| `commands/*.md` | five slash commands for manual invocation — `/seismo-cc:impact` (full scope), `/seismo-cc:tests` (affected tests only), `/seismo-cc:api-diff` (breaking public-surface changes only), `/seismo-cc:brief` (business impact brief, reuse-vs-net-new, no code), `/seismo-cc:scope` (scope a not-yet-built feature from a spec) |
 | `hooks/hooks.json` | **`PreToolUse` guard** that refuses an `Edit`/`Write` without a fresh report |
 | `lib/analyze.js` | **the engine** — `run(opts)` computes the impact `data` with **no side effects**; `persist(root, data)` writes the report. One code path, shared by every transport |
 | `bin/impact.js` | the **CLI transport** — a thin, zero-dependency Node wrapper that calls `run()` then `persist()` and formats stdout (`--json` / `--short` / md) |
@@ -64,12 +64,13 @@ The subagent cannot write (`disallowedTools`), so the guard never triggers again
 
 ## Commands and surfaces
 
-Four slash commands cover manual invocation over the same engine; all delegate to the read-only `impact-analyst` subagent (the first three are scoped developer views, the last is a business-audience view):
+Five slash commands cover manual invocation over the same engine; all delegate to the read-only `impact-analyst` subagent (the first three are scoped developer views; the last two are decision/planning views that assume the code may be written by an agent, so they size work by reuse-vs-net-new, not developer-hours):
 
 - `/seismo-cc:impact [symbol|file|--diff]` — the **full impact scope**: risk, callers, historical coupling, public surface, irreversible ops, affected tests.
 - `/seismo-cc:tests [symbol|file|--diff]` — **only the affected tests**, each labelled `structural` (references the symbol) or `historical` (git co-change), plus the command to run them.
 - `/seismo-cc:api-diff [--base <ref>]` — **only the breaking public-surface changes** vs a base (removed / changed endpoints, DTOs, hubs; additions excluded; base defaults to `origin/main`).
-- `/seismo-cc:brief [symbol|file|--diff]` — a **business impact brief for analysts / project managers**: effort size, affected functional areas, downstream teams to notify, risk and required sign-offs, and a recommended decision — in plain language, **no code**, with the *why* narrated by the agent from the same analysis data.
+- `/seismo-cc:brief [symbol|file|--diff|<spec>]` — a **business impact brief for analysts / PMs / leads**: reuse-vs-net-new, a complexity estimate, downstream teams, risk, and **the decisions a human must make** — plain language, **no code**. Handles a change *or* a not-yet-built spec (empty diff ⇒ sized by building blocks, not a misleading "small").
+- `/seismo-cc:scope [<spec>|symbols]` — **scope a not-yet-built feature from a spec**: maps each concept to a **reusable anchor** found in the code or a **net-new** piece to build, with complexity and the decisions that block the work. For the implementer (agent or dev) and the tech lead.
 
 When each surface is used:
 
@@ -80,7 +81,8 @@ When each surface is used:
 | `/seismo-cc:impact [symbol\|file\|--diff]` | manual request for the full impact scope | the user |
 | `/seismo-cc:tests [symbol\|file\|--diff]` | manual request for only the affected tests | the user |
 | `/seismo-cc:api-diff [--base <ref>]` | manual request for only breaking public-surface changes vs a base | the user |
-| `/seismo-cc:brief [symbol\|file\|--diff]` | manual request for a business impact brief (analyst / PM audience, no code) | the user |
+| `/seismo-cc:brief [symbol\|file\|--diff\|<spec>]` | manual request for a business impact brief (analyst / PM / lead; reuse-vs-net-new, decisions; no code) | the user |
+| `/seismo-cc:scope [<spec>]` | manual request to scope a not-yet-built feature (reusable anchors vs net-new, blocking decisions) | the user |
 | PreToolUse hook (gate) | every `Edit`/`Write`/`MultiEdit` on a guarded file | automatically (blocks if no fresh covering report) |
 | MCP `get_blast_radius` | the agent needs the full scope and to persist coverage for the gate | the agent (only MCP tool that writes the report) |
 | MCP `get_affected_tests` / `get_public_api_diff` / `get_irreversible_ops` | the agent needs a scoped, advisory answer without persisting | the agent |
@@ -99,7 +101,7 @@ The repository **is** a Claude Code marketplace (`.claude-plugin/marketplace.jso
 /plugin install seismo-cc@seismo-cc
 ```
 
-`seismo-cc@seismo-cc` reads as `<plugin>@<marketplace>` — both are named `seismo-cc`. Once installed, everything activates on its own: the `impact-analysis` skill, the `impact-analyst` subagent, the four slash commands (`/seismo-cc:impact`, `/seismo-cc:tests`, `/seismo-cc:api-diff`, `/seismo-cc:brief`), the `seismo-impact` MCP server, and the `PreToolUse` guard. Nothing else to wire.
+`seismo-cc@seismo-cc` reads as `<plugin>@<marketplace>` — both are named `seismo-cc`. Once installed, everything activates on its own: the `impact-analysis` skill, the `impact-analyst` subagent, the five slash commands (`/seismo-cc:impact`, `/seismo-cc:tests`, `/seismo-cc:api-diff`, `/seismo-cc:brief`, `/seismo-cc:scope`), the `seismo-impact` MCP server, and the `PreToolUse` guard. Nothing else to wire.
 
 ### From GitHub (clone)
 
