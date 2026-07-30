@@ -12,7 +12,7 @@
   "$comment_thresholds": "Calibrate AFTER measuring on this repo. A 293-entity monolith does not share the same thresholds as a microservice.",
 
   "externalConsumers": [
-    { "name": "Internal mobile app (KMP)", "consumes": "/api/dispense-orders", "contact": "mobile-team@example.com" },
+    { "name": "Internal mobile app (KMP)", "consumes": "/api/checkout", "contact": "mobile-team@example.com" },
     { "name": "Partner portal", "consumes": "SignalR /hubs/orders", "contact": "alerts@example.com" }
   ],
 
@@ -24,5 +24,5 @@
   "gitDepth": 400,
 
   "memoryPath": null,
-  "$comment_memoryPath": "seismo-memory store (JSON). null = disabled. Relative path anchored on repo root (e.g. '.impact/memory.json'), or an absolute/central path to share incidents across repos. ADVISORY ONLY: prior incidents annotate symbols but never change the risk level or the gate decision. Format: { \"incidents\": [ { \"symbol\": \"DispenseOrder\", \"file\": \"src/Order.cs\", \"kind\": \"regression\", \"ref\": \"TICKET-123\", \"at\": \"2026-03-01\" } ] }"
+  "$comment_memoryPath": "seismo-memory store (JSON). null = disabled. Relative path anchored on repo root (e.g. '.impact/memory.json'), or an absolute/central path to share incidents across repos. ADVISORY ONLY: prior incidents annotate symbols but never change the risk level or the gate decision. Format: { \"incidents\": [ { \"symbol\": \"Checkout\", \"file\": \"src/Order.cs\", \"kind\": \"regression\", \"ref\": \"TICKET-123\", \"at\": \"2026-03-01\" } ] }"
 }

@@ -18,12 +18,12 @@ The fixture alone, if you want to poke around by hand:
 
 ```bash
 ./test/fixture.sh /tmp/fixture
-cd /tmp/fixture/pharma-api
-node <plugin>/bin/impact.js analyze --symbols DispenseOrder
+cd /tmp/fixture/sample-service
+node <plugin>/bin/impact.js analyze --symbols Checkout
 cat .impact/report.md
 ```
 
-The interesting case to observe: `DispenseRepository.cs` shows up in the report. It never names `DispenseOrder` in a signature — only historical coupling surfaces it. That is the mechanism that justifies the tool; if that assertion ever breaks, the tool is useless.
+The interesting case to observe: `CheckoutRepository.cs` shows up in the report. It never names `Checkout` in a signature — only historical coupling surfaces it. That is the mechanism that justifies the tool; if that assertion ever breaks, the tool is useless.
 
 ## Phase 2 — A real repo, read-only
 
@@ -57,7 +57,7 @@ Then, in the session:
 |---|---|
 | `/plugin` | `seismo-cc` listed, Errors tab empty |
 | `/agents` | `impact-analyst` present, read-only |
-| `/seismo-cc:impact DispenseOrder` | delegates to the subagent, returns a short report |
+| `/seismo-cc:impact Checkout` | delegates to the subagent, returns a short report |
 | `/context` | check the plugin's context cost |
 
 Guard test, the most important one:

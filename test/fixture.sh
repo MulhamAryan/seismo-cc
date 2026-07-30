@@ -1,100 +1,100 @@
 #!/usr/bin/env bash
-# Crée un repo de test synthétique avec les pièges qui comptent :
-# migration destructive, SQL brut concaténé, endpoint public, envoi de mail,
-# et un repo frère consommateur pour vérifier le signal cross-repo.
+# Builds a synthetic test repo with the traps that matter:
+# destructive migration, concatenated raw SQL, public endpoint, mail send,
+# and a sibling consumer repo to exercise the cross-repo signal.
 #
-#   ./test/fixture.sh [dossier]        (défaut : /tmp/seismo-cc-fixture)
+#   ./test/fixture.sh [dir]        (default: /tmp/seismo-cc-fixture)
 set -euo pipefail
 
 WS="${1:-/tmp/seismo-cc-fixture}"
 rm -rf "$WS"
 mkdir -p "$WS"
 
-# ---------------------------------------------------------------- repo principal
-API="$WS/pharma-api"
+# ---------------------------------------------------------------- main repo
+API="$WS/sample-service"
 mkdir -p "$API"/{src/Domain,src/Api/Endpoints,src/Infrastructure/Migrations,tests/Domain.Tests,app/Http/Controllers,database/migrations}
 cd "$API"
 git init -q && git config user.email dev@example.com && git config user.name "Dev Example"
 echo ".impact/" > .gitignore
 
-cat > src/Domain/DispenseOrder.cs <<'EOF'
-namespace Pharma.Domain;
+cat > src/Domain/Checkout.cs <<'EOF'
+namespace Sample.Domain;
 
-public class DispenseOrder
+public class Checkout
 {
     public Guid Id { get; set; }
-    public string PatientCode { get; set; } = "";
-    public DispenseStatus Status { get; set; }
+    public string CustomerCode { get; set; } = "";
+    public CheckoutStatus Status { get; set; }
 
-    public void Cancel() { Status = DispenseStatus.Cancelled; }
+    public void Cancel() { Status = CheckoutStatus.Cancelled; }
 }
 
-public enum DispenseStatus { Draft, Submitted, Cancelled }
+public enum CheckoutStatus { Draft, Submitted, Cancelled }
 EOF
 
-cat > src/Domain/DispenseOrderManager.cs <<'EOF'
-namespace Pharma.Domain;
+cat > src/Domain/CheckoutManager.cs <<'EOF'
+namespace Sample.Domain;
 
-public class DispenseOrderManager
+public class CheckoutManager
 {
-    public DispenseOrder Build(string patientCode) => new() { PatientCode = patientCode };
-    public void CancelOrder(DispenseOrder order) => order.Cancel();
+    public Checkout Build(string customerCode) => new() { CustomerCode = customerCode };
+    public void CancelOrder(Checkout order) => order.Cancel();
 }
 EOF
 
-cat > src/Api/Endpoints/CreateDispenseOrderEndpoint.cs <<'EOF'
+cat > src/Api/Endpoints/CreateCheckoutEndpoint.cs <<'EOF'
 using FastEndpoints;
-namespace Pharma.Api;
+namespace Sample.Api;
 
-public class CreateDispenseOrderEndpoint : Endpoint<CreateDispenseOrderRequest>
+public class CreateCheckoutEndpoint : Endpoint<CreateCheckoutRequest>
 {
     public override void Configure()
     {
-        Post("/api/dispense-orders");
+        Post("/api/checkout");
         AllowAnonymous();
     }
 
-    public override async Task HandleAsync(CreateDispenseOrderRequest req, CancellationToken ct)
+    public override async Task HandleAsync(CreateCheckoutRequest req, CancellationToken ct)
     {
-        var order = new DispenseOrderManager().Build(req.PatientCode);
+        var order = new CheckoutManager().Build(req.CustomerCode);
         await SendOkAsync(order, ct);
     }
 }
 
-public class CreateDispenseOrderRequest { public string PatientCode { get; set; } = ""; }
+public class CreateCheckoutRequest { public string CustomerCode { get; set; } = ""; }
 EOF
 
-# Piège : SQL brut concaténé. Aucun appel nommé à DispenseOrder dans la
-# signature — seul le couplage historique le fera remonter.
-cat > src/Infrastructure/DispenseRepository.cs <<'EOF'
-namespace Pharma.Infrastructure;
+# Trap: concatenated raw SQL. No named call to Checkout in the signature —
+# only historical coupling will surface it.
+cat > src/Infrastructure/CheckoutRepository.cs <<'EOF'
+namespace Sample.Infrastructure;
 
-public class DispenseRepository
+public class CheckoutRepository
 {
     public void Purge(string code)
     {
-        Db.Database.ExecuteSqlRaw("DELETE FROM DispenseOrders WHERE PatientCode = '" + code + "'");
+        Db.Database.ExecuteSqlRaw("DELETE FROM Checkouts WHERE CustomerCode = '" + code + "'");
     }
 }
 EOF
 
-cat > tests/Domain.Tests/DispenseOrderTests.cs <<'EOF'
-public class DispenseOrderTests
+cat > tests/Domain.Tests/CheckoutTests.cs <<'EOF'
+public class CheckoutTests
 {
     [Fact]
     public void Cancel_sets_status()
     {
-        var o = new DispenseOrder();
+        var o = new Checkout();
         o.Cancel();
     }
 }
 EOF
 
-cat > app/Http/Controllers/PharmacyController.php <<'EOF'
+cat > app/Http/Controllers/PartnerController.php <<'EOF'
 <?php
 namespace App\Http\Controllers;
 
-class PharmacyController extends Controller
+class PartnerController extends Controller
 {
     public function sync()
     {
@@ -104,44 +104,44 @@ class PharmacyController extends Controller
 }
 EOF
 
-git add -A && git commit -qm "init: domaine, endpoint, repository, tests"
+git add -A && git commit -qm "init: domain, endpoint, repository, tests"
 
-# Historique : quatre commits touchant ensemble domaine + endpoint + repository.
-# C'est ce qui crée le couplage à 100% que l'analyse statique ne verrait pas.
+# History: four commits touching domain + endpoint + repository together.
+# This is what creates the 100% coupling that static analysis cannot see.
 for i in 1 2 3 4; do
-  printf '// évolution %s\n' "$i" >> src/Domain/DispenseOrder.cs
-  printf '// évolution %s\n' "$i" >> src/Api/Endpoints/CreateDispenseOrderEndpoint.cs
-  printf '// évolution %s\n' "$i" >> src/Infrastructure/DispenseRepository.cs
-  git add -A && git commit -qm "feat: évolution $i"
+  printf '// revision %s\n' "$i" >> src/Domain/Checkout.cs
+  printf '// revision %s\n' "$i" >> src/Api/Endpoints/CreateCheckoutEndpoint.cs
+  printf '// revision %s\n' "$i" >> src/Infrastructure/CheckoutRepository.cs
+  git add -A && git commit -qm "feat: revision $i"
 done
 
-# Migration destructive NON committée : sert à tester le mode --diff et le
-# passage en BLOQUANT.
+# Uncommitted destructive migration: used to exercise --diff mode and the
+# escalation to BLOCKING.
 cat > src/Infrastructure/Migrations/20260715_DropLegacyRef.cs <<'EOF'
 public partial class DropLegacyRef : Migration
 {
     protected override void Up(MigrationBuilder migrationBuilder)
     {
-        migrationBuilder.DropColumn(name: "LegacyRef", table: "DispenseOrders");
+        migrationBuilder.DropColumn(name: "LegacyRef", table: "Checkouts");
     }
 }
 EOF
 
-# ------------------------------------------------------------ repo consommateur
+# ------------------------------------------------------------ consumer repo
 MOB="$WS/mobile-client"
 mkdir -p "$MOB/src"
 cd "$MOB"
 git init -q && git config user.email dev@example.com && git config user.name "Dev Example"
-cat > src/DispenseApi.kt <<'EOF'
+cat > src/CheckoutApi.kt <<'EOF'
 package com.example.app
 
-class DispenseApi {
-    suspend fun fetch(): List<DispenseOrder> =
-        client.get("/api/dispense-orders").body()
+class CheckoutApi {
+    suspend fun fetch(): List<Checkout> =
+        client.get("/api/checkout").body()
 }
 EOF
-git add -A && git commit -qm "init: client mobile KMP"
+git add -A && git commit -qm "init: mobile KMP client"
 
-echo "Fixture prête : $WS"
-echo "  repo principal : $API"
-echo "  consommateur   : $MOB"
+echo "Fixture ready: $WS"
+echo "  main repo : $API"
+echo "  consumer  : $MOB"

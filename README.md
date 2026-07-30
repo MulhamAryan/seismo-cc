@@ -38,7 +38,7 @@ This is **additive** — the raw call-site counts feeding the risk score are unc
 
 ```mermaid
 flowchart TD
-    U["User: &quot;fix the status bug on DispenseOrder&quot;"] --> S{{"impact-analysis skill<br/>triggers"}}
+    U["User: &quot;fix the status bug on Checkout&quot;"] --> S{{"impact-analysis skill<br/>triggers"}}
     S -->|delegates| A["impact-analyst subagent<br/>read-only · isolated context"]
     A --> E["bin/impact.js analyze"]
     E --> W["writes .impact/report.md<br/>+ latest.json (with fileHashes)"]
@@ -129,11 +129,11 @@ Historical coupling is the heart of the tool. It is what catches what static ana
 ## Direct use of the engine
 
 ```bash
-node bin/impact.js analyze --symbols DispenseOrder,OrderService --short
-node bin/impact.js analyze --files src/Domain/DispenseOrder.cs
+node bin/impact.js analyze --symbols Checkout,OrderService --short
+node bin/impact.js analyze --files src/Domain/Checkout.cs
 node bin/impact.js analyze --diff --base origin/main
-node bin/impact.js analyze --symbols DispenseOrder --workspace ~/repos   # cross-repo
-node bin/impact.js gate --file src/Domain/DispenseOrder.cs               # used by the hook
+node bin/impact.js analyze --symbols Checkout --workspace ~/repos   # cross-repo
+node bin/impact.js gate --file src/Domain/Checkout.cs               # used by the hook
 ```
 
 Outputs: `.impact/report.md` (readable, for the agent and the reviewer) and `.impact/latest.json` (machine).
@@ -175,17 +175,17 @@ Only `get_blast_radius` persists (`run()` + `persist()`) and returns `reportPath
 
 ## Example output
 
-On a `.NET` repo (FastEndpoints endpoint + raw SQL + auth), for the symbol `DispenseOrder`:
+On a `.NET` repo (FastEndpoints endpoint + raw SQL + auth), for the symbol `Checkout`:
 
 ```bash
-node bin/impact.js analyze --symbols DispenseOrder --short
+node bin/impact.js analyze --symbols Checkout --short
 ```
 
 ```
 Impact HIGH — non-reversible side-effect operation detected; 2 public-surface element(s) affected
-Symbols: DispenseOrder
+Symbols: Checkout
 Callers: 3 sites in 2 file(s)
-Historical coupling: src/Api/Endpoints/CreateDispenseOrderEndpoint.cs, src/Infrastructure/DispenseRepository.cs
+Historical coupling: src/Api/Endpoints/CreateCheckoutEndpoint.cs, src/Infrastructure/CheckoutRepository.cs
 Irreversible: Authentication / authorization changed; Raw SQL executed
 Priority tests: 1
 ```
@@ -197,41 +197,41 @@ Without `--short`, the same run writes `.impact/report.md`, readable by the agen
 
 **Risk: HIGH** — non-reversible side-effect operation detected; 2 public-surface element(s) affected
 
-Repo `pharma-api` · branch `master` · HEAD `46990922`
+Repo `sample-service` · branch `master` · HEAD `46990922`
 
 ## Symbols analyzed
 
 | Symbol | Kind | Declared in | Call sites | Files |
 |---|---|---|---|---|
-| `DispenseOrder` | type | `src/Domain/DispenseOrder.cs`:2 | 3 | 2 |
+| `Checkout` | type | `src/Domain/Checkout.cs`:2 | 3 | 2 |
 
 ## Callers — confidence: textual
 
-- `src/Domain/DispenseOrderManager.cs` — 2 line(s) (lines 5, 6) · symbol `DispenseOrder`
-- `tests/Domain.Tests/DispenseOrderTests.cs` — 1 line(s) (lines 6) · symbol `DispenseOrder`
+- `src/Domain/CheckoutManager.cs` — 2 line(s) (lines 5, 6) · symbol `Checkout`
+- `tests/Domain.Tests/CheckoutTests.cs` — 1 line(s) (lines 6) · symbol `Checkout`
 
 ## Historical coupling — confidence: historical (deterministic)
 
 | File | Co-change | Via |
 |---|---|---|
-| `src/Api/Endpoints/CreateDispenseOrderEndpoint.cs` | 5/5 commits (100%) | `src/Domain/DispenseOrder.cs` |
-| `src/Infrastructure/DispenseRepository.cs` | 5/5 commits (100%) | `src/Domain/DispenseOrder.cs` |
+| `src/Api/Endpoints/CreateCheckoutEndpoint.cs` | 5/5 commits (100%) | `src/Domain/Checkout.cs` |
+| `src/Infrastructure/CheckoutRepository.cs` | 5/5 commits (100%) | `src/Domain/Checkout.cs` |
 
 ## Public surface affected
 
-- **FastEndpoints endpoint** in `…/CreateDispenseOrderEndpoint.cs` — `: Endpoint<`, `Post("")`
-- **Public contract (DTO)** in `…/CreateDispenseOrderEndpoint.cs` — `class CreateDispenseOrderRequest`
+- **FastEndpoints endpoint** in `…/CreateCheckoutEndpoint.cs` — `: Endpoint<`, `Post("")`
+- **Public contract (DTO)** in `…/CreateCheckoutEndpoint.cs` — `class CreateCheckoutRequest`
 
 ## Irreversible or side-effecting operations
 
 | Weight | Nature | Where | Evidence |
 |---|---|---|---|
-| 4 | Authentication / authorization changed | `…/CreateDispenseOrderEndpoint.cs` | `AllowAnonymous` |
-| 3 | Raw SQL executed | `…/DispenseRepository.cs` | `ExecuteSqlRaw` |
+| 4 | Authentication / authorization changed | `…/CreateCheckoutEndpoint.cs` | `AllowAnonymous` |
+| 3 | Raw SQL executed | `…/CheckoutRepository.cs` | `ExecuteSqlRaw` |
 
 ## Tests to run first
 
-- `tests/Domain.Tests/DispenseOrderTests.cs` — references DispenseOrder _(structural)_
+- `tests/Domain.Tests/CheckoutTests.cs` — references Checkout _(structural)_
 ```
 
 The full report also includes a "Blind spots" section reminding you what the analysis does not see (reflection, convention-based DI, database-driven jobs, etc.). See [Known limitations](#known-limitations--read-before-trusting-it).
@@ -264,7 +264,7 @@ Real (truncated) excerpt:
 ```json
 {
   "mode": "plan",
-  "repo": "pharma-api",
+  "repo": "sample-service",
   "branch": "master",
   "risk": {
     "level": "high",
@@ -274,16 +274,16 @@ Real (truncated) excerpt:
     ]
   },
   "symbols": [
-    { "name": "DispenseOrder", "kind": "type", "declFile": "src/Domain/DispenseOrder.cs", "declLine": 2, "callSites": 3, "files": 2 }
+    { "name": "Checkout", "kind": "type", "declFile": "src/Domain/Checkout.cs", "declLine": 2, "callSites": 3, "files": 2 }
   ],
   "coupling": [
-    { "file": "src/Api/Endpoints/CreateDispenseOrderEndpoint.cs", "commits": 5, "of": 5, "ratio": 1, "via": "src/Domain/DispenseOrder.cs" }
+    { "file": "src/Api/Endpoints/CreateCheckoutEndpoint.cs", "commits": 5, "of": 5, "ratio": 1, "via": "src/Domain/Checkout.cs" }
   ],
   "irreversible": [
-    { "id": "auth", "label": "Authentication / authorization changed", "weight": 4, "where": "src/Api/Endpoints/CreateDispenseOrderEndpoint.cs", "evidence": "AllowAnonymous" }
+    { "id": "auth", "label": "Authentication / authorization changed", "weight": 4, "where": "src/Api/Endpoints/CreateCheckoutEndpoint.cs", "evidence": "AllowAnonymous" }
   ],
   "tests": [
-    { "file": "tests/Domain.Tests/DispenseOrderTests.cs", "reasons": ["references DispenseOrder"], "confidence": "structural" }
+    { "file": "tests/Domain.Tests/CheckoutTests.cs", "reasons": ["references Checkout"], "confidence": "structural" }
   ]
 }
 ```
@@ -303,7 +303,7 @@ Additions are **not** breaking — a new endpoint breaks no existing consumer �
 
 **Honest limitations** (inherent to the regex approach, no type resolution):
 
-- **Parameter/signature changes under the same route attribute are not detected.** The regex sees the route attribute (e.g. `Post("dispense")`), not the method's parameters — change the DTO or arguments while keeping the route and it looks unchanged.
+- **Parameter/signature changes under the same route attribute are not detected.** The regex sees the route attribute (e.g. `Post("checkout")`), not the method's parameters — change the DTO or arguments while keeping the route and it looks unchanged.
 - **A route rename is reported as `removed`, not `changed`.** The old and new samples do not share a key, so the pairing that yields `changed` does not fire.
 - **There is regex overlap between endpoint rules**, so the same physical endpoint can surface under more than one id.
 
@@ -350,7 +350,7 @@ node bin/impact.js gate --file src/Domain/Unrelated.cs
 # → exit 1  (the hook translates it to exit 2 = Edit refused)
 
 # Covered file, non-blocking risk → passes
-node bin/impact.js gate --file src/Domain/DispenseOrder.cs
+node bin/impact.js gate --file src/Domain/Checkout.cs
 # → stdout: "impact ok — high risk (0 min)"
 # → exit 0
 ```

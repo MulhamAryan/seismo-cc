@@ -6,7 +6,7 @@
  * Zero dependencies, no index, no server: the goal is to be able to drop into
  * any repo without installation.
  *
- *   impact analyze --symbols DispenseOrder,OrderService
+ *   impact analyze --symbols Checkout,OrderService
  *   impact analyze --files src/Foo.cs
  *   impact analyze --diff --base main
  *   impact gate --file src/Foo.cs

@@ -99,10 +99,10 @@ Then, inside Claude Code:
 The engine runs without Claude Code at all. From a clone:
 
 ```bash
-node bin/impact.js analyze --symbols DispenseOrder,OrderService --short
-node bin/impact.js analyze --files src/Domain/DispenseOrder.cs
+node bin/impact.js analyze --symbols Checkout,OrderService --short
+node bin/impact.js analyze --files src/Domain/Checkout.cs
 node bin/impact.js analyze --diff --base origin/main
-node bin/impact.js gate --file src/Domain/DispenseOrder.cs
+node bin/impact.js gate --file src/Domain/Checkout.cs
 ```
 
 To get a global `seismo-cc` command:
@@ -110,7 +110,7 @@ To get a global `seismo-cc` command:
 ```bash
 cd seismo-cc
 npm link          # exposes the "seismo-cc" bin on your PATH
-seismo-cc analyze --symbols DispenseOrder --short
+seismo-cc analyze --symbols Checkout --short
 ```
 
 Outputs land in `.impact/`: `report.md` (readable) and `latest.json` (machine). Add `.impact/` to the target repo's `.gitignore`.
