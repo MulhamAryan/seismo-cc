@@ -42,7 +42,7 @@ function parseArgs(argv) {
 
 // Transport CLI : délègue le calcul à engine.run(), persiste l'artefact, puis
 // formate stdout. Le coeur (résolution, couplage, risque) vit dans
-// lib/analyze.js — partagé tel quel avec le serveur MCP eonix-impact.
+// lib/analyze.js — partagé tel quel avec le serveur MCP seismo-impact.
 function analyze(args) {
   const data = engine.run({
     root: args.root,
@@ -159,7 +159,7 @@ function fail(msg) {
 // ---------------------------------------------------------------------------
 
 /**
- * record : écrivain d'eonix-memory. Appelé HORS du chemin d'analyse read-only
+ * record : écrivain d'seismo-memory. Appelé HORS du chemin d'analyse read-only
  * — par un humain en post-mortem, un job CI, ou le git hook post-merge
  * (hooks/incident-record.js). Deux modes :
  *   record --from-reverts        auto : mine les commits `git revert` récents
@@ -170,7 +170,7 @@ function record(args) {
   const root = path.resolve(args.root || process.cwd());
   const cfg = config.load(root);
   if (!cfg.memoryPath) {
-    fail('eonix-memory is disabled. Set "memoryPath" in impact.config.json to enable incident recording.');
+    fail('seismo-memory is disabled. Set "memoryPath" in impact.config.json to enable incident recording.');
     return;
   }
 
@@ -211,7 +211,7 @@ try {
   analyze --files a.cs,b.php     scope inferred from the file's declarations
   analyze --diff --base main     analysis of the current diff
   gate --file a.cs               guard: does a fresh report cover this file?
-  record --from-reverts          mine git reverts into eonix-memory (advisory)
+  record --from-reverts          mine git reverts into seismo-memory (advisory)
   record --file a.cs --ref MIL-1 record one incident manually
 
 Options: --root <dir> --workspace <dir> --json --short

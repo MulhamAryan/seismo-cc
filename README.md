@@ -10,7 +10,7 @@ Impact analysis before modification. The plugin provides the following component
 | `hooks/hooks.json` | **`PreToolUse` guard** that refuses an `Edit`/`Write` without a fresh report |
 | `lib/analyze.js` | **the engine** — `run(opts)` computes the impact `data` with **no side effects**; `persist(root, data)` writes the report. One code path, shared by every transport |
 | `bin/impact.js` | the **CLI transport** — a thin, zero-dependency Node wrapper that calls `run()` then `persist()` and formats stdout (`--json` / `--short` / md) |
-| `src/mcp-servers/eonix-impact/` | the **MCP transport** — a zero-dependency stdio JSON-RPC server over the *same* engine (see [MCP server](#mcp-server--eonix-impact)) |
+| `src/mcp-servers/seismo-impact/` | the **MCP transport** — a zero-dependency stdio JSON-RPC server over the *same* engine (see [MCP server](#mcp-server--seismo-impact)) |
 
 The engine is deliberately dependency-free, index-free and server-free: it must drop into any of the ~100 repos with no build, no NuGet, no service to host.
 
@@ -73,7 +73,7 @@ The repository **is** a Claude Code marketplace (`.claude-plugin/marketplace.jso
 /plugin install seismo-cc@seismo-cc
 ```
 
-`seismo-cc@seismo-cc` reads as `<plugin>@<marketplace>` — both are named `seismo-cc`. Once installed, everything activates on its own: the `impact-analysis` skill, the `impact-analyst` subagent, the `/seismo-cc:impact` command, the `eonix-impact` MCP server, and the `PreToolUse` guard. Nothing else to wire.
+`seismo-cc@seismo-cc` reads as `<plugin>@<marketplace>` — both are named `seismo-cc`. Once installed, everything activates on its own: the `impact-analysis` skill, the `impact-analyst` subagent, the `/seismo-cc:impact` command, the `seismo-impact` MCP server, and the `PreToolUse` guard. Nothing else to wire.
 
 ### From GitHub (clone)
 
@@ -140,15 +140,15 @@ Outputs: `.impact/report.md` (readable, for the agent and the reviewer) and `.im
 
 Options: `--root <dir>` `--workspace <dir>` `--json` `--short`
 
-## MCP server — `eonix-impact`
+## MCP server — `seismo-impact`
 
-The second transport over the engine. `src/mcp-servers/eonix-impact/index.js` is a **zero-dependency stdio JSON-RPC 2.0** server, declared in `.claude-plugin/plugin.json` under `mcpServers`:
+The second transport over the engine. `src/mcp-servers/seismo-impact/index.js` is a **zero-dependency stdio JSON-RPC 2.0** server, declared in `.claude-plugin/plugin.json` under `mcpServers`:
 
 ```json
 "mcpServers": {
-  "eonix-impact": {
+  "seismo-impact": {
     "command": "node",
-    "args": ["${CLAUDE_PLUGIN_ROOT}/src/mcp-servers/eonix-impact/index.js"]
+    "args": ["${CLAUDE_PLUGIN_ROOT}/src/mcp-servers/seismo-impact/index.js"]
   }
 }
 ```
@@ -309,7 +309,7 @@ Additions are **not** breaking — a new endpoint breaks no existing consumer �
 
 These are the price of "works everywhere without a build". They would be resolved by the planned Roslyn index (v2), which sees real symbols and method parameters.
 
-## Prior incidents — `priorHints` (advisory, eonix-memory)
+## Prior incidents — `priorHints` (advisory, seismo-memory)
 
 An **optional** history layer, off by default. When `memoryPath` is set in the config (relative path anchored on the repo root, or a central absolute path shared across repos), the engine attaches **prior-incident hints** to the analyzed symbols and files: *"this symbol caused 2 past incidents (last: MIL-123)"*.
 
@@ -459,7 +459,7 @@ To be done only if v1 is genuinely adopted — the order matters.
 
 1. **Exact resolution for .NET.** A Roslyn tool (`MSBuildWorkspace` + `SymbolFinder.FindReferencesAsync`) replaces name search: no more false positives on homonyms, overloads distinguished. Cost: requires a passing build, hence unusable on part of the fleet.
 2. **Shared index.** Serialize the per-repo symbol graph and publish it, so that cross-repo becomes deterministic instead of being a grep.
-3. ~~**MCP `seismo-cc`.** Expose `get_blast_radius`, `get_affected_tests`, `get_public_api_diff`, `get_irreversible_ops` as tools.~~ **Shipped** as the [`eonix-impact` MCP server](#mcp-server--eonix-impact): the four tools are live over the same engine, declared in `.claude-plugin/plugin.json`. It stays advisory — the deterministic gate remains the authority.
+3. ~~**MCP `seismo-cc`.** Expose `get_blast_radius`, `get_affected_tests`, `get_public_api_diff`, `get_irreversible_ops` as tools.~~ **Shipped** as the [`seismo-impact` MCP server](#mcp-server--seismo-impact): the four tools are live over the same engine, declared in `.claude-plugin/plugin.json`. It stays advisory — the deterministic gate remains the authority.
 4. **Learned layer.** Feed a memory store of incidents with the pair (impact report, incident occurred or not) and train a risk scoring of the diff. Reference: DRS-OSS, arXiv 2511.21964. Not to be attempted before several hundred real pairs.
 
 ## The real product risk

@@ -8,9 +8,9 @@
   "license": "Apache-2.0",
   "keywords": ["impact-analysis", "blast-radius", "dotnet", "laravel", "maintenance"],
   "mcpServers": {
-    "eonix-impact": {
+    "seismo-impact": {
       "command": "node",
-      "args": ["${CLAUDE_PLUGIN_ROOT}/src/mcp-servers/eonix-impact/index.js"]
+      "args": ["${CLAUDE_PLUGIN_ROOT}/src/mcp-servers/seismo-impact/index.js"]
     }
   }
 }

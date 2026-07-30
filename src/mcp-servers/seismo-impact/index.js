@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 'use strict';
 /**
- * Serveur MCP eonix-impact — transport stdio JSON-RPC 2.0, ZÉRO dépendance.
+ * Serveur MCP seismo-impact — transport stdio JSON-RPC 2.0, ZÉRO dépendance.
  *
  * Expose 4 tools qui appellent le MÊME lib/analyze.js que la CLI. SEUL
  * `get_blast_radius` — le tool qui définit le périmètre AVANT une édition —
@@ -20,7 +20,7 @@
 const engine = require('../../../lib/analyze');
 
 const PROTOCOL = '2024-11-05';
-const SERVER = { name: 'eonix-impact', version: '0.1.0' };
+const SERVER = { name: 'seismo-impact', version: '0.1.0' };
 const REPORT = '.impact/report.md';
 
 // --- Les 4 tools : schéma d'entrée + implémentation (slice de engine.run). ---

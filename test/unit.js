@@ -111,7 +111,7 @@ t('ApiSurface: finding aspnet-attr détecté', !!aspnet);
 t('ApiSurface: échantillon contient HttpGet',
   !!aspnet && aspnet.samples.some(s => s.includes('HttpGet')));
 
-// --- eonix-memory : recordMany idempotent + priorHints advisory ---
+// --- seismo-memory : recordMany idempotent + priorHints advisory ---
 const memory = require('../lib/memory');
 const os = require('os');
 const memDir = path.join(os.tmpdir(), 'seismo-memtest-' + process.pid);

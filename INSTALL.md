@@ -8,7 +8,7 @@ Every method below is zero-dependency: **Node 18+** and **git** are the only pre
 | Hack on it locally with Claude Code | [2. Claude Code — local plugin dir](#2-claude-code--local-plugin-dir-development) |
 | Ship it inside your team's own catalog | [3. Claude Code — entry in another catalog](#3-claude-code--entry-in-another-catalog) |
 | Run the engine from the shell / CI | [4. Standalone CLI](#4-standalone-cli) |
-| Call it as an MCP server | [5. MCP server](#5-mcp-server-eonix-impact) |
+| Call it as an MCP server | [5. MCP server](#5-mcp-server-seismo-impact) |
 | Tune it for one repo | [6. Per-repo configuration](#6-per-repo-configuration) |
 
 ---
@@ -32,7 +32,7 @@ Once installed, **everything activates on its own** — nothing else to wire:
 | `impact-analysis` skill | tells the main agent when to analyze and what to do with the verdict |
 | `impact-analyst` subagent | runs the analysis read-only, in its own context |
 | `/seismo-cc:impact` command | manual invocation |
-| `eonix-impact` MCP server | the four typed impact tools |
+| `seismo-impact` MCP server | the four typed impact tools |
 | `PreToolUse` guard | refuses an `Edit`/`Write` without a fresh report |
 
 **Update / remove:**
@@ -119,7 +119,7 @@ Options: `--root <dir>` `--workspace <dir>` `--base <ref>` `--json` `--short`.
 
 ---
 
-## 5. MCP server (`eonix-impact`)
+## 5. MCP server (`seismo-impact`)
 
 The same engine, exposed as a zero-dependency stdio JSON-RPC server. When installed as a Claude Code plugin (method 1 or 2) it is declared automatically via `.claude-plugin/plugin.json` and needs no setup.
 
@@ -128,9 +128,9 @@ To register it manually in another MCP client, point the client at:
 ```json
 {
   "mcpServers": {
-    "eonix-impact": {
+    "seismo-impact": {
       "command": "node",
-      "args": ["/absolute/path/to/seismo-cc/src/mcp-servers/eonix-impact/index.js"]
+      "args": ["/absolute/path/to/seismo-cc/src/mcp-servers/seismo-impact/index.js"]
     }
   }
 }

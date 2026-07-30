@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 'use strict';
 /**
- * Hook POST-incident d'eonix-memory — alimente le store à partir des commits
+ * Hook POST-incident d'seismo-memory — alimente le store à partir des commits
  * de revert. Ce n'est PAS un hook Claude Code (les incidents surviennent en
  * ops/deploy, pas pendant l'édition) : c'est un hook git post-merge ou une
  * étape CI. Il tourne HORS du chemin d'analyse read-only, donc aucune boucle
@@ -27,7 +27,7 @@ try {
   const depth = Number(process.env.SEISMO_REVERT_DEPTH) > 0 ? Number(process.env.SEISMO_REVERT_DEPTH) : 200;
   const { added, reverts } = engine.recordFromReverts(cfg, root, depth);
   // Diagnostic sur stderr uniquement (un hook ne doit pas polluer stdout).
-  if (added) process.stderr.write(`[seismo-cc] eonix-memory: ${added} incident(s) recorded from ${reverts} revert commit(s)\n`);
+  if (added) process.stderr.write(`[seismo-cc] seismo-memory: ${added} incident(s) recorded from ${reverts} revert commit(s)\n`);
 } catch {
   // Un hook d'historique ne doit jamais casser un merge ou un pipeline.
 }
