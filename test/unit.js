@@ -157,3 +157,38 @@ t('P1: route-concat detected', hHas('route-concat'));
 // Prose strings must NOT be flagged as a reflection reference (noise control).
 fs.writeFileSync(path.join(hdir, 'b.cs'), 'class X { void M(){ Log("OrderService failed to start now"); } }\n');
 t('P1: prose string not flagged', hidden.stringMentions(hdir, ['b.cs'], ['OrderService']).length === 0);
+
+// --- P2: validation harness (coupling predictor precision/recall) ---
+const validate = require('../lib/validate');
+
+// couplingFrom is pure over a commit list. A co-changes with B in 3/4 of A's
+// commits, with C in 1/4 (below 0.5, excluded).
+const ccList = [
+  { files: ['A', 'B'] }, { files: ['A', 'B'] }, { files: ['A', 'B'] }, { files: ['A', 'C'] },
+];
+const cf = git.couplingFrom(ccList, ['A'], { minCommits: 2, minRatio: 0.5 });
+t('P2: couplingFrom keeps B at 0.75, drops C',
+  cf.length === 1 && cf[0].file === 'B' && Math.abs(cf[0].ratio - 0.75) < 1e-9);
+
+// evaluateAt: a history where A and B always ship together should score
+// precision = recall = 1 (seed A predicts B, seed B predicts A).
+const hist = [];
+hist.push({ files: ['A', 'B'] });                 // newest = evaluation commit
+for (let i = 0; i < 5; i++) hist.push({ files: ['A', 'B'] });  // prior history
+const ev = validate.evaluateAt(hist, 2, 0.5, { minPriorCommits: 3, maxCommitFiles: 10 });
+t('P2: perfect coupling -> precision 1', ev.precision === 1);
+t('P2: perfect coupling -> recall 1', ev.recall === 1);
+// Every commit with enough prior history is evaluated (index 0,1,2 here: prior
+// 5,4,3 >= minPriorCommits 3), each contributing 2 seed queries.
+t('P2: all eligible commits evaluated, 2 seeds each', ev.evalCommits === 3 && ev.queries === 6);
+
+// A file never seen before drags recall down (unpredictable), never precision.
+const hist2 = [];
+hist2.push({ files: ['A', 'B', 'Z'] });           // Z is new, has no prior history
+for (let i = 0; i < 5; i++) hist2.push({ files: ['A', 'B'] });
+const ev2 = validate.evaluateAt(hist2, 2, 0.5, { minPriorCommits: 3, maxCommitFiles: 10 });
+t('P2: unseen file lowers recall, not precision', ev2.precision === 1 && ev2.recall < 1);
+
+// evaluateCoupling returns a grid and a best cell.
+const sweep = validate.evaluateCoupling(hist, { minPriorCommits: 3, maxCommitFiles: 10, minCommitsList: [2], minRatioList: [0.5] });
+t('P2: evaluateCoupling exposes a best cell', !!sweep.best && sweep.best.f1 === 1);

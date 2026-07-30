@@ -44,15 +44,34 @@ tests in `test/unit.js`. The template-binding weighting is intentionally left ou
 for now (view bindings that name the symbol are already caught by the reference
 search; those that do not remain a residual blind spot).
 
-## P2 — Empirical validation · effort M · **the real scientific gap** · planned
+## P2 — Empirical validation · effort M · **the real scientific gap** · shipped
 
-The tool is a heuristic; today its precision/recall is unmeasured. This is the
-step that turns "plausible" into "credible".
+The tool is a heuristic; its precision/recall was unmeasured. This is the step
+that turns "plausible" into "credible".
 
-- Build a labelled set: past incidents / `git revert` commits × whether the tool
-  would have flagged the change.
-- A precision/recall harness (extend `test/calibrate.js`).
-- Tune thresholds from data instead of by intuition.
+- Transaction-based precision/recall of the **coupling predictor**, using the
+  standard MSR leave-out method (Zimmermann et al.): each commit is a transaction,
+  one file is the query seed, the rest is predicted from **prior history only**
+  (temporal, leakage-free), and the prediction is scored against what actually
+  co-changed.
+- A threshold **sweep** over `couplingMinCommits` × `couplingMinRatio`, so each
+  repo can be tuned from data instead of intuition.
+- `git revert` commits are available as a weak incident oracle (`recentReverts`,
+  already used by `impact record --from-reverts`) for a future risk-precision
+  check.
+
+**Shipped**: pure engine `lib/validate.js` (`evaluateCoupling` / `evaluateAt`)
+over an explicit commit list — enabled by extracting `git.couplingFrom` from
+`git.coupling` — plus the CLI runner `test/validate.js`
+(`node test/validate.js <repo> [--window N] [--json]`). Unit tests in
+`test/unit.js`. See [07-git-historical-coupling.md](07-git-historical-coupling.md#11-validation)
+for the method and its honest caveats.
+
+**Scope, stated honestly.** This validates the **coupling** signal only — the
+language-agnostic core. The static fan-in signal needs a resolved-symbol oracle
+to score (P4) and is not measured yet. Recall is a conservative lower bound
+(first-time pairings are unpredictable by any co-change model). A labelled
+incident set beyond `git revert` remains future work and gates the learned layer.
 
 ## P3 — Transitive impact (2 hops) · effort M · **biggest practical gap** · planned
 

@@ -129,14 +129,15 @@ Node 18+. No `npm install`.
 ## Testing
 
 ```bash
-./test/smoke.sh                              # 81 assertions on the engine and the guard
+./test/smoke.sh                              # engine + guard assertions
 ./test/fixture.sh /tmp/fixture               # standalone synthetic multi-stack repo
-node test/calibrate.js ~/repos --commits 60  # trigger rate on real history
+node test/calibrate.js ~/repos --commits 60  # risk-level trigger rate on real history
+node test/validate.js ~/repos/my-service     # precision/recall of the coupling predictor
 ```
 
 Full four-phase protocol, including the manual Claude Code part: `test/README.md`.
 
-Calibration is the phase that decides deployment. Do not push anything to the marketplace before running it on three representative repos.
+Calibration is the phase that decides deployment. Do not push anything to the marketplace before running it on three representative repos. `validate.js` is the empirical precision/recall of the co-change signal — a leakage-free, transaction-based measurement that also sweeps the coupling thresholds so you can tune them per repo (see [`docs/07`](docs/07-git-historical-coupling.md#11-validation) and [`docs/ROADMAP.md`](docs/ROADMAP.md)).
 
 ## What it answers
 

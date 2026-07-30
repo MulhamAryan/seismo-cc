@@ -596,3 +596,52 @@ as **evidence for a reviewer**, ranked and quantified, rather than as a verdict.
 It is the strongest signal the tool has precisely because it sees what the
 parser cannot — and it is honest about the fact that it is a statistical claim,
 not a proof.
+
+## 11. Validation
+
+Because coupling is the tool's strongest claim, it is the one that gets measured
+(ROADMAP P2). The harness treats git history as its own ground truth using the
+standard transaction-based method from the Mining Software Repositories
+literature (Zimmermann et al.):
+
+1. Each commit is a **transaction** — a set of files that changed together.
+2. For an evaluation commit, pick one file as the query **seed**, and predict the
+   rest with `couplingFrom` built from **prior commits only**
+   (`commits.slice(i+1)`; the log is newest-first, so this is strictly older
+   history — no leakage; the scored commit is never in its own training set).
+3. Compare the predicted set to what actually co-changed in that commit and
+   accumulate true/false positives and false negatives (micro-averaged).
+
+The engine is `lib/validate.js` (`evaluateAt` for one threshold pair,
+`evaluateCoupling` for the full sweep); the runner is `test/validate.js`:
+
+```bash
+node test/validate.js ~/repos/my-service --window 800
+```
+
+It prints precision/recall/F1 across the grid `couplingMinCommits` ×
+`couplingMinRatio` and marks the best F1, so a repo's thresholds can be tuned
+from data rather than intuition. Extracting the pure `couplingFrom` from
+`coupling` ([`lib/git.js`](../lib/git.js)) is what makes this leakage-free split
+possible.
+
+**Honest caveats (built into the method):**
+
+- It scores the **coupling signal only** — the language-agnostic core. The static
+  fan-in signal needs a resolved-symbol oracle and is out of scope until
+  [ROADMAP P4](./ROADMAP.md). Do not read these numbers as the tool's overall
+  accuracy.
+- **Recall is a conservative lower bound.** A file that never co-changed with the
+  seed before is unpredictable by *any* co-change model, yet still counts as a
+  miss. Co-change is meant to catch stable, repeated pairings — not first-time
+  ones.
+- **Mega-commits are excluded** (`maxCommitFiles`, default 25): mass renames and
+  reformats are not logical transactions and would dominate the counts.
+- Only commits with enough prior history are scored (`minPriorCommits`, default
+  30); a young repo is reported as "too little history to validate" rather than
+  scored on noise.
+
+`git revert` commits (`recentReverts`, already used by
+`impact record --from-reverts`) are available as a weak incident oracle for a
+future risk-precision check; a richer labelled incident set gates the learned
+risk layer (ROADMAP "Later").
