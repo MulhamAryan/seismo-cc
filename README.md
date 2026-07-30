@@ -14,6 +14,8 @@ Impact analysis before modification. The plugin provides the following component
 
 The engine is deliberately dependency-free, index-free and server-free: it must drop into any of the ~100 repos with no build, no NuGet, no service to host.
 
+> 📚 **In-depth documentation** lives in [`docs/`](docs/README.md): architecture, the scientific concepts, the formal model with equations, algorithms and complexity, the analysis pipeline, the risk model, the historical-coupling engine, the configuration reference, and an honest account of the limitations.
+
 **One engine, two transports.** The analysis logic lives in `lib/analyze.js` — `run(opts)` returns the impact `data` and writes nothing; `persist(root, data)` materialises `.impact/report.md` + `.impact/latest.json`. The CLI and the MCP server are two thin transports over this single engine: one computation path, one artifact. That is what guarantees the `PreToolUse` gate always sees the report the analysis just wrote, whatever the source.
 
 **Support per stack:**
