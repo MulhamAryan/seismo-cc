@@ -35,7 +35,7 @@ into it, so the `PreToolUse` gate stays deterministic (same guarantee as
 - Unit tests + recalibration.
 
 Outcome: roughly half of the current blind-spot list moves from "blind" to
-"checked"; the rest (see P5) stays honestly listed.
+"checked"; the rest (DB-configured behavior) stays honestly listed.
 
 **Shipped** in `lib/hidden.js`, wired into `lib/analyze.js` (advisory, after the
 risk verdict), rendered by `lib/report.js` as the "Hidden-dependency checks"
@@ -69,9 +69,9 @@ for the method and its honest caveats.
 
 **Scope, stated honestly.** This validates the **coupling** signal only — the
 language-agnostic core. The static fan-in signal needs a resolved-symbol oracle
-to score (P4) and is not measured yet. Recall is a conservative lower bound
-(first-time pairings are unpredictable by any co-change model). A labelled
-incident set beyond `git revert` remains future work and gates the learned layer.
+to score (exact resolution — out of scope) and is not measured yet. Recall is a
+conservative lower bound (first-time pairings are unpredictable by any co-change
+model). A labelled incident set beyond `git revert` remains out of scope.
 
 ## P3 — Transitive impact (2 hops) · effort M · **biggest practical gap** · shipped
 
@@ -92,47 +92,37 @@ Bounded by `MAX_SEED_FILES` / `MAX_SEED_SYMBOLS` / `MAX_RESULT_FILES`. Unit test
 in `test/unit.js`.
 
 This is deliberately **not** full transitive closure — that needs a resolved
-graph (P4). See [09-limitations-and-validity.md](09-limitations-and-validity.md)
-for why depth is capped at 2 without one.
+graph, which is out of scope (see below). See
+[09-limitations-and-validity.md](09-limitations-and-validity.md) for why depth is
+capped at 2 without one.
 
-## P4 — Resolved graph for .NET (Roslyn) · effort L · optional · planned
+## Out of scope (not on the roadmap)
 
-- When a build is available, an optional Roslyn resolver
-  (`MSBuildWorkspace` + `SymbolFinder`) replaces the name search: real call edges,
-  overloads distinguished, homonym false positives eliminated.
-- Enables fan-out / out-degree and, potentially, centrality measures.
-- Requires a passing build, so it degrades to the lexical path where that is
-  unavailable. See [04-algorithms-and-complexity.md](04-algorithms-and-complexity.md).
+These are **not planned**. They would only be reconsidered if real adoption proved
+the need. They are listed here — and discussed in
+[09-limitations-and-validity.md](09-limitations-and-validity.md) — only to be
+honest about where the tool deliberately stops:
 
-## P5 — Runtime confirmation (observability) · effort L · planned
-
-The only real cover for dependencies configured **in the database** (jobs,
-business rules, feature flags) and for reflection.
-
-- Ingest OpenTelemetry traces, SQL logs, a DI-container dump, or a feature-flag
-  service API.
-- Confirm and weight the static edges with observed runtime behavior.
-
-Until this exists, DB-configured behavior remains an honest residual blind spot.
-
-## P6 — Cross-repo shared index · effort L · planned
-
-- Serialize the per-repo symbol graph and publish it, so cross-repo analysis
-  becomes deterministic instead of the current capped name search.
-
-## Later — learned risk layer · planned
-
-- Feed a store of `(impact report, incident occurred or not)` pairs and train a
-  learned risk scoring of the diff. Reference: DRS-OSS. Not to be attempted before
-  several hundred real pairs exist (depends on P2).
+- **Exact symbol resolution (Roslyn / tree-sitter).** Real call edges, overloads
+  distinguished, homonyms eliminated, fan-out / centrality — but it needs a green
+  build, so it is unusable on part of the fleet. That build requirement is why it
+  stays out of scope, not a lack of value.
+- **Runtime confirmation (observability).** Ingesting OpenTelemetry traces, SQL
+  logs, a DI-container dump or a feature-flag API would be the only real cover for
+  dependencies configured *in the database*. Until then, DB-configured behavior is
+  an honest residual blind spot.
+- **Cross-repo shared index.** A serialized, published per-repo symbol graph would
+  make cross-repo analysis deterministic instead of the current capped name search.
+- **Learned risk layer.** Training a risk score on `(impact report, incident or
+  not)` pairs (cf. DRS-OSS) would need several hundred real labelled pairs first.
 
 ---
 
 ## Sequencing
 
-**P1 → P2 → P3** is the committed near-term order: immediate value, then proof it
-works, then the biggest practical gap. **P4 / P5 / P6** are gated on genuine
-adoption — pursuing them earlier would be over-engineering.
+**P1 → P2 → P3** is the committed order, and all three are shipped. Anything
+heavier (see "Out of scope" above) is intentionally kept off the roadmap until
+adoption proves the need — pursuing it earlier would be over-engineering.
 
 The single metric that decides the tool's survival is the **false-positive /
 noise rate** (see [09-limitations-and-validity.md](09-limitations-and-validity.md)

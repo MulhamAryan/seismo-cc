@@ -34,7 +34,7 @@ follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   (2 hops)" section (`confidence: indirect`) and `indirect[]` in `latest.json`.
   Report-only: never affects the risk or the gate. Bounded and toggleable via the
   `indirect` config flag (default on). Not full transitive closure (needs a
-  resolved graph, ROADMAP P4).
+  resolved graph, out of scope).
 - **Empirical validation harness (P2).** `lib/validate.js` measures the
   transaction-based precision/recall of the co-change predictor using the MSR
   leave-out method: each commit is a transaction, one file is the query seed, the
@@ -43,7 +43,7 @@ follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   so thresholds can be tuned per repo. Pure `git.couplingFrom` extracted from
   `git.coupling`; CLI runner `node test/validate.js <repo> [--window N] [--json]`.
   Scoped honestly: validates the coupling signal only (static fan-in needs a
-  resolved oracle, ROADMAP P4); recall is a conservative lower bound.
+  resolved oracle, out of scope); recall is a conservative lower bound.
 - **Hidden-dependency checks (P1).** Advisory lexical scans that shrink the
   blind-spot list by reporting what the reference search cannot see: the symbol
   name inside string literals (reflection / DI / serialization / config), an
@@ -105,7 +105,7 @@ follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Anonymized all examples to a neutral sample domain (`Checkout`/`Order`,
   `sample-service`); test fixture and smoke suite renamed to match.
 - `test/smoke.sh` made portable on Windows/git-bash (POSIX paths converted for
-  node inside `-e` literals and JSON payloads); 102 assertions pass locally,
+  node inside `-e` literals and JSON payloads); the full suite passes locally,
   unchanged on Linux CI.
 
 ## [0.1.0]

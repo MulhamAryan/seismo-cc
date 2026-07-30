@@ -168,7 +168,7 @@ those files ever naming the changed symbol. It is **report-only** — like the
 advisory layers, it never enters `riskLevel` or the gate — labelled
 `confidence: indirect`, bounded by the caps in `lib/transitive.js`, and disabled
 when the `indirect` config flag is `false`. Not a transitive closure (that needs
-a resolved graph, ROADMAP P4).
+a resolved graph, which is out of scope — see [ROADMAP.md](ROADMAP.md)).
 
 ### Stage 3 — historical coupling seed (`lib/analyze.js:209-220`)
 

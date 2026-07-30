@@ -628,8 +628,8 @@ possible.
 **Honest caveats (built into the method):**
 
 - It scores the **coupling signal only** — the language-agnostic core. The static
-  fan-in signal needs a resolved-symbol oracle and is out of scope until
-  [ROADMAP P4](./ROADMAP.md). Do not read these numbers as the tool's overall
+  fan-in signal needs a resolved-symbol oracle (exact resolution — out of scope,
+  see [ROADMAP.md](./ROADMAP.md)). Do not read these numbers as the tool's overall
   accuracy.
 - **Recall is a conservative lower bound.** A file that never co-changed with the
   seed before is unpredictable by *any* co-change model, yet still counts as a
