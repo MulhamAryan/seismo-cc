@@ -27,6 +27,15 @@ follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   inflated on merge-heavy histories.
 
 ### Added
+- **Empirical validation harness (P2).** `lib/validate.js` measures the
+  transaction-based precision/recall of the co-change predictor using the MSR
+  leave-out method: each commit is a transaction, one file is the query seed, the
+  rest is predicted from prior history only (temporal, leakage-free) and scored
+  against what actually co-changed. Sweeps `couplingMinCommits` × `couplingMinRatio`
+  so thresholds can be tuned per repo. Pure `git.couplingFrom` extracted from
+  `git.coupling`; CLI runner `node test/validate.js <repo> [--window N] [--json]`.
+  Scoped honestly: validates the coupling signal only (static fan-in needs a
+  resolved oracle, ROADMAP P4); recall is a conservative lower bound.
 - **Hidden-dependency checks (P1).** Advisory lexical scans that shrink the
   blind-spot list by reporting what the reference search cannot see: the symbol
   name inside string literals (reflection / DI / serialization / config), an
