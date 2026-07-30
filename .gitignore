@@ -1,0 +1,19 @@
+# Rapports générés par l'outil
+.impact/
+
+# Config locale calibrée par repo (l'exemple versionné suffit)
+impact.config.json
+
+# Node
+node_modules/
+npm-debug.log*
+
+# Fixtures / temporaires de test
+/tmp/
+*.tmp
+
+# OS / éditeurs
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

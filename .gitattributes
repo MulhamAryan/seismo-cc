@@ -1,0 +1,5 @@
+# Les scripts shell doivent rester en LF, même sur Windows.
+*.sh text eol=lf
+*.js text eol=lf
+*.json text eol=lf
+*.md text eol=lf

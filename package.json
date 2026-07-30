@@ -1,0 +1,45 @@
+{
+  "name": "seismo-cc",
+  "version": "0.1.0",
+  "description": "Impact analysis before modifying code, for Claude Code: callers, git historical coupling, public surface, irreversible operations, affected tests. Zero dependencies.",
+  "license": "Apache-2.0",
+  "type": "commonjs",
+  "bin": {
+    "seismo-cc": "bin/impact.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "test": "bash test/smoke.sh"
+  },
+  "keywords": [
+    "claude-code",
+    "impact-analysis",
+    "blast-radius",
+    "code-review",
+    "static-analysis",
+    "maintenance"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mulham-aryan/seismo-cc.git"
+  },
+  "homepage": "https://github.com/mulham-aryan/seismo-cc#readme",
+  "bugs": {
+    "url": "https://github.com/mulham-aryan/seismo-cc/issues"
+  },
+  "files": [
+    "bin",
+    "lib",
+    "hooks",
+    "agents",
+    "skills",
+    "commands",
+    ".claude-plugin",
+    "impact.config.example.json",
+    "README.md",
+    "LICENSE",
+    "NOTICE"
+  ]
+}

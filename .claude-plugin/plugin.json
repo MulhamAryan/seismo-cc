@@ -1,0 +1,16 @@
+{
+  "name": "seismo-cc",
+  "version": "0.1.0",
+  "description": "Impact analysis before modifying code: callers, git historical coupling, public surface, irreversible operations, affected tests. Ships an analyst subagent, a skill, a /seismo-cc:impact command and a PreToolUse guard.",
+  "author": { "name": "seismo-cc contributors", "email": "moulhamo@gmail.com" },
+  "homepage": "https://github.com/mulham-aryan/seismo-cc#readme",
+  "repository": "https://github.com/mulham-aryan/seismo-cc",
+  "license": "Apache-2.0",
+  "keywords": ["impact-analysis", "blast-radius", "dotnet", "laravel", "maintenance"],
+  "mcpServers": {
+    "eonix-impact": {
+      "command": "node",
+      "args": ["${CLAUDE_PLUGIN_ROOT}/src/mcp-servers/eonix-impact/index.js"]
+    }
+  }
+}

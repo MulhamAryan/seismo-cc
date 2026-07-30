@@ -1,0 +1,18 @@
+{
+  "name": "my-catalog",
+  "owner": { "name": "seismo-cc contributors", "email": "moulhamo@gmail.com" },
+  "metadata": {
+    "description": "Claude Code plugin catalog",
+    "version": "1.0.0"
+  },
+  "plugins": [
+    {
+      "name": "seismo-cc",
+      "source": "./seismo-cc",
+      "description": "Impact analysis before modifying code: callers, historical coupling, public surface, irreversible operations.",
+      "version": "0.1.0",
+      "category": "maintenance",
+      "strict": true
+    }
+  ]
+}
