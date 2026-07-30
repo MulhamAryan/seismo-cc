@@ -311,7 +311,7 @@ These are the price of "works everywhere without a build". They would be resolve
 
 ## Prior incidents — `priorHints` (advisory, seismo-memory)
 
-An **optional** history layer, off by default. When `memoryPath` is set in the config (relative path anchored on the repo root, or a central absolute path shared across repos), the engine attaches **prior-incident hints** to the analyzed symbols and files: *"this symbol caused 2 past incidents (last: MIL-123)"*.
+An **optional** history layer, off by default. When `memoryPath` is set in the config (relative path anchored on the repo root, or a central absolute path shared across repos), the engine attaches **prior-incident hints** to the analyzed symbols and files: *"this symbol caused 2 past incidents (last: TICKET-123)"*.
 
 It is **advisory only, and this is the critical property**: `priorHints` never affects `risk.level` and never affects the gate decision — both stay deterministic, computed by `lib/rules.js` from the analysis alone. It only adds context to the report. Same diff, same verdict, whatever the incident history — the gate stays reproducible.
 
@@ -323,7 +323,7 @@ Incidents are **written outside the analysis path** — an incident is an ops/de
 
 ```bash
 # Manual (postmortem / CI): one explicit incident
-node bin/impact.js record --file src/Order.cs --kind regression --ref MIL-123
+node bin/impact.js record --file src/Order.cs --kind regression --ref TICKET-123
 
 # Automatic: mine recent `git revert` commits — a revert is the most reliable
 # signal that a change had to be undone; its files become file-level incidents

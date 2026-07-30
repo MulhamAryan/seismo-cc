@@ -212,7 +212,7 @@ try {
   analyze --diff --base main     analysis of the current diff
   gate --file a.cs               guard: does a fresh report cover this file?
   record --from-reverts          mine git reverts into seismo-memory (advisory)
-  record --file a.cs --ref MIL-1 record one incident manually
+  record --file a.cs --ref TICKET-1 record one incident manually
 
 Options: --root <dir> --workspace <dir> --json --short
          record: --symbol --file --kind --ref --at --from-reverts --depth
