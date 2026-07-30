@@ -45,8 +45,9 @@ always sees the report the analysis just wrote, regardless of who triggered it
 
 ### How a run gets triggered inside Claude Code
 
-The user-facing entry points are three slash commands, all delegating to the
-read-only `impact-analyst` subagent, each a scoped view over this same pipeline:
+The user-facing entry points are four slash commands, all delegating to the
+read-only `impact-analyst` subagent — three scoped developer views and one
+business-audience brief over this same pipeline:
 
 - `/seismo-cc:impact [symbol|file|--diff]` — the full impact scope.
 - `/seismo-cc:tests [symbol|file|--diff]` — only the affected tests
@@ -55,6 +56,9 @@ read-only `impact-analyst` subagent, each a scoped view over this same pipeline:
 - `/seismo-cc:api-diff [--base <ref>]` — only the breaking public-surface
   changes vs a base, i.e. `apiBreaking` from `computeApiBreaking` (§3, Stage 4);
   conceptually the MCP `get_public_api_diff` query.
+- `/seismo-cc:brief [symbol|file|--diff]` — a business-audience view for analysts
+  and project managers: the agent translates the same assembled `data` (effort,
+  areas, downstream, risk, decision) into plain language, no code.
 
 The MCP query tools `get_affected_tests` / `get_public_api_diff` compute those
 same scoped answers **without** persisting, so they never overwrite the gate's

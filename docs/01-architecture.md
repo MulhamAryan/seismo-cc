@@ -205,7 +205,7 @@ The layering is intentional: the **hook** is the hard, deterministic floor (an e
 
 ### 6.1 Surfaces — when each is used
 
-The same engine is reachable through several surfaces; what differs is the trigger and who invokes it. The three slash commands are scoped views (full scope / tests only / breaking-change only), all delegating to the read-only subagent.
+The same engine is reachable through several surfaces; what differs is the trigger and who invokes it. The four slash commands are views over the same analysis — three scoped developer views (full scope / tests only / breaking-change only) and one business-audience brief (`/seismo-cc:brief`) — all delegating to the read-only subagent.
 
 | Surface | Triggered when | Invoked by |
 |---|---|---|

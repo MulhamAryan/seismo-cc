@@ -64,7 +64,7 @@ The subagent cannot write (`disallowedTools`), so the guard never triggers again
 
 ## Commands and surfaces
 
-Three slash commands cover manual invocation, each a scoped view over the same engine; all three delegate to the read-only `impact-analyst` subagent:
+Four slash commands cover manual invocation over the same engine; all delegate to the read-only `impact-analyst` subagent (the first three are scoped developer views, the last is a business-audience view):
 
 - `/seismo-cc:impact [symbol|file|--diff]` — the **full impact scope**: risk, callers, historical coupling, public surface, irreversible ops, affected tests.
 - `/seismo-cc:tests [symbol|file|--diff]` — **only the affected tests**, each labelled `structural` (references the symbol) or `historical` (git co-change), plus the command to run them.
@@ -99,7 +99,7 @@ The repository **is** a Claude Code marketplace (`.claude-plugin/marketplace.jso
 /plugin install seismo-cc@seismo-cc
 ```
 
-`seismo-cc@seismo-cc` reads as `<plugin>@<marketplace>` — both are named `seismo-cc`. Once installed, everything activates on its own: the `impact-analysis` skill, the `impact-analyst` subagent, the three slash commands (`/seismo-cc:impact`, `/seismo-cc:tests`, `/seismo-cc:api-diff`), the `seismo-impact` MCP server, and the `PreToolUse` guard. Nothing else to wire.
+`seismo-cc@seismo-cc` reads as `<plugin>@<marketplace>` — both are named `seismo-cc`. Once installed, everything activates on its own: the `impact-analysis` skill, the `impact-analyst` subagent, the four slash commands (`/seismo-cc:impact`, `/seismo-cc:tests`, `/seismo-cc:api-diff`, `/seismo-cc:brief`), the `seismo-impact` MCP server, and the `PreToolUse` guard. Nothing else to wire.
 
 ### From GitHub (clone)
 
