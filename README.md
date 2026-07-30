@@ -271,6 +271,7 @@ The hook and any programmatic consumer read this file. Main fields:
 | `risk` | object | `{ level: low\|moderate\|high\|blocking, reasons: [] }` |
 | `symbols[]` | array | `name, kind, declFile, declLine, callSites, files` |
 | `topCallers[]` | array | call sites sorted by number of occurrences; each carries `confidence` (`high`/`normal`/`low`) and `imported` (non-.NET resolution) |
+| `indirect[]` | array | `file, count, via[], confidence: 'indirect'` — 2-hop indirect impact (files referencing the types declared in the direct callers); **report-only**, never affects risk |
 | `coupling[]` | array | `file, commits, of, ratio, via` — git co-change |
 | `apiSurface[]` | array | `id, label, file, samples[]` — endpoints/DTOs affected |
 | `apiBreaking[]` | array | `file, id, label, symbol, change, before, after?` — breaking public-surface changes vs `base` (diff mode only) |

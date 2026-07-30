@@ -159,6 +159,17 @@ For each `name` in `symbolNames`:
 
 For the resolution model and confidence weighting see **03-mathematical-model.md**.
 
+### Stage 2b — indirect (2-hop) impact (`lib/transitive.js`)
+
+After the direct callers, one extra hop is computed (ROADMAP P3): the direct
+caller files → the **types they declare** (the seeds) → the files that reference
+those seed types. This surfaces second-order scope a change can ripple to without
+those files ever naming the changed symbol. It is **report-only** — like the
+advisory layers, it never enters `riskLevel` or the gate — labelled
+`confidence: indirect`, bounded by the caps in `lib/transitive.js`, and disabled
+when the `indirect` config flag is `false`. Not a transitive closure (that needs
+a resolved graph, ROADMAP P4).
+
 ### Stage 3 — historical coupling seed (`lib/analyze.js:209-220`)
 
 The seed is the deduplicated set of `targetFiles` + each symbol's declaration

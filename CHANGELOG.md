@@ -27,6 +27,14 @@ follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   inflated on merge-heavy histories.
 
 ### Added
+- **Indirect (2-hop) impact (P3).** `lib/transitive.js` computes exactly one
+  extra hop — the direct callers → the types they declare → the files that
+  reference those types — surfacing second-order scope that a change can ripple
+  to without ever naming the changed symbol. Rendered as an "Indirect impact
+  (2 hops)" section (`confidence: indirect`) and `indirect[]` in `latest.json`.
+  Report-only: never affects the risk or the gate. Bounded and toggleable via the
+  `indirect` config flag (default on). Not full transitive closure (needs a
+  resolved graph, ROADMAP P4).
 - **Empirical validation harness (P2).** `lib/validate.js` measures the
   transaction-based precision/recall of the co-change predictor using the MSR
   leave-out method: each commit is a transaction, one file is the query seed, the

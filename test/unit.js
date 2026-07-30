@@ -192,3 +192,28 @@ t('P2: unseen file lowers recall, not precision', ev2.precision === 1 && ev2.rec
 // evaluateCoupling returns a grid and a best cell.
 const sweep = validate.evaluateCoupling(hist, { minPriorCommits: 3, maxCommitFiles: 10, minCommitsList: [2], minRatioList: [0.5] });
 t('P2: evaluateCoupling exposes a best cell', !!sweep.best && sweep.best.f1 === 1);
+
+// --- P3: indirect (2-hop) impact ---
+const transitive = require('../lib/transitive');
+const tdir = fs.mkdtempSync(path.join(os.tmpdir(), 'seismo-transitive-'));
+// svc.cs declares the changed type; ctrl.cs is a DIRECT caller and itself
+// declares OrderController; view.cs references OrderController (2nd hop).
+fs.writeFileSync(path.join(tdir, 'svc.cs'), 'namespace N;\npublic class OrderService {\n public void Run(){}\n}\n');
+fs.writeFileSync(path.join(tdir, 'ctrl.cs'), 'namespace N;\npublic class OrderController {\n void M(){ new OrderService().Run(); }\n}\n');
+fs.writeFileSync(path.join(tdir, 'view.cs'), 'namespace N;\npublic class HomeView {\n void M(){ var c = new OrderController(); }\n}\n');
+const tFiles = ['svc.cs', 'ctrl.cs', 'view.cs'];
+const ind = transitive.indirectImpact(tdir, tFiles, {
+  directFiles: new Set(['ctrl.cs']),                         // hop-1: caller of OrderService
+  exclude: new Set(['svc.cs', 'ctrl.cs']),                   // targets + direct callers
+  excludeNames: ['OrderService'],
+});
+t('P3: indirect impact finds the 2nd-hop file', ind.some(x => x.file === 'view.cs' && x.via.includes('OrderController')));
+t('P3: indirect confidence labelled', ind.every(x => x.confidence === 'indirect'));
+t('P3: direct callers excluded from indirect', !ind.some(x => x.file === 'ctrl.cs' || x.file === 'svc.cs'));
+// The original symbol is not re-expanded as a seed.
+const ind2 = transitive.indirectImpact(tdir, tFiles, {
+  directFiles: new Set(['ctrl.cs']),
+  exclude: new Set(['svc.cs', 'ctrl.cs', 'view.cs']),        // exclude everything downstream
+  excludeNames: ['OrderService'],
+});
+t('P3: nothing indirect when downstream excluded', ind2.length === 0);

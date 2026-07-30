@@ -73,17 +73,27 @@ to score (P4) and is not measured yet. Recall is a conservative lower bound
 (first-time pairings are unpredictable by any co-change model). A labelled
 incident set beyond `git revert` remains future work and gates the learned layer.
 
-## P3 — Transitive impact (2 hops) · effort M · **biggest practical gap** · planned
+## P3 — Transitive impact (2 hops) · effort M · **biggest practical gap** · shipped
 
-Today the analysis is one hop (direct callers). The most common real-world miss
-is indirect impact `A → B → C`.
+The direct analysis is one hop (direct callers). The most common real-world miss
+is indirect impact `A → B → changed symbol`, where `A` never names the symbol.
 
-- Extend `references` recursively to depth 2, capped.
-- Report an explicit **"indirect impact"** section, clearly separated from direct
-  callers and labelled with its (lower) confidence.
+- Exactly **one extra hop**, bounded: the direct caller files → the TYPE symbols
+  they declare (the seeds) → the files that reference those seeds.
+- An explicit **"Indirect impact (2 hops)"** report section, separated from the
+  direct callers and labelled `confidence: indirect`.
+- **Report-only**: it never enters the risk computation or the gate, so the
+  deterministic guarantee holds (same contract as the advisory layers).
 
-See [09-limitations-and-validity.md](09-limitations-and-validity.md) for why full
-transitive reachability is out of scope without a resolved graph.
+**Shipped**: `lib/transitive.js` (`indirectImpact`), wired into `lib/analyze.js`
+as step 2b, rendered by `lib/report.js`, exposed as `indirect[]` in
+`latest.json`, and toggleable with the `indirect` config flag (default on).
+Bounded by `MAX_SEED_FILES` / `MAX_SEED_SYMBOLS` / `MAX_RESULT_FILES`. Unit tests
+in `test/unit.js`.
+
+This is deliberately **not** full transitive closure — that needs a resolved
+graph (P4). See [09-limitations-and-validity.md](09-limitations-and-validity.md)
+for why depth is capped at 2 without one.
 
 ## P4 — Resolved graph for .NET (Roslyn) · effort L · optional · planned
 
