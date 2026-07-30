@@ -31,7 +31,7 @@ Once installed, **everything activates on its own** — nothing else to wire:
 |---|---|
 | `impact-analysis` skill | tells the main agent when to analyze and what to do with the verdict |
 | `impact-analyst` subagent | runs the analysis read-only, in its own context |
-| `/seismo-cc:impact` · `/seismo-cc:tests` · `/seismo-cc:api-diff` commands | manual invocation — full scope / affected tests only / breaking public-surface changes only |
+| `/seismo-cc:impact` · `/seismo-cc:tests` · `/seismo-cc:api-diff` · `/seismo-cc:brief` commands | manual invocation — full scope / affected tests only / breaking public-surface changes only / business impact brief for analysts & PMs |
 | `seismo-impact` MCP server | the four typed impact tools |
 | `PreToolUse` guard | refuses an `Edit`/`Write` without a fresh report |
 

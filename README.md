@@ -6,7 +6,7 @@ Impact analysis before modification. The plugin provides the following component
 |---|---|
 | `agents/impact-analyst.md` | **read-only subagent** — runs the analysis in its own context and returns ~15 lines |
 | `skills/impact-analysis/` | teaches the main agent **when** to delegate and **what to do** with the verdict |
-| `commands/*.md` | three slash commands for manual invocation — `/seismo-cc:impact` (full scope), `/seismo-cc:tests` (affected tests only), `/seismo-cc:api-diff` (breaking public-surface changes only) |
+| `commands/*.md` | four slash commands for manual invocation — `/seismo-cc:impact` (full scope), `/seismo-cc:tests` (affected tests only), `/seismo-cc:api-diff` (breaking public-surface changes only), `/seismo-cc:brief` (business impact brief for analysts / PMs, no code) |
 | `hooks/hooks.json` | **`PreToolUse` guard** that refuses an `Edit`/`Write` without a fresh report |
 | `lib/analyze.js` | **the engine** — `run(opts)` computes the impact `data` with **no side effects**; `persist(root, data)` writes the report. One code path, shared by every transport |
 | `bin/impact.js` | the **CLI transport** — a thin, zero-dependency Node wrapper that calls `run()` then `persist()` and formats stdout (`--json` / `--short` / md) |
@@ -69,6 +69,7 @@ Three slash commands cover manual invocation, each a scoped view over the same e
 - `/seismo-cc:impact [symbol|file|--diff]` — the **full impact scope**: risk, callers, historical coupling, public surface, irreversible ops, affected tests.
 - `/seismo-cc:tests [symbol|file|--diff]` — **only the affected tests**, each labelled `structural` (references the symbol) or `historical` (git co-change), plus the command to run them.
 - `/seismo-cc:api-diff [--base <ref>]` — **only the breaking public-surface changes** vs a base (removed / changed endpoints, DTOs, hubs; additions excluded; base defaults to `origin/main`).
+- `/seismo-cc:brief [symbol|file|--diff]` — a **business impact brief for analysts / project managers**: effort size, affected functional areas, downstream teams to notify, risk and required sign-offs, and a recommended decision — in plain language, **no code**, with the *why* narrated by the agent from the same analysis data.
 
 When each surface is used:
 
@@ -79,6 +80,7 @@ When each surface is used:
 | `/seismo-cc:impact [symbol\|file\|--diff]` | manual request for the full impact scope | the user |
 | `/seismo-cc:tests [symbol\|file\|--diff]` | manual request for only the affected tests | the user |
 | `/seismo-cc:api-diff [--base <ref>]` | manual request for only breaking public-surface changes vs a base | the user |
+| `/seismo-cc:brief [symbol\|file\|--diff]` | manual request for a business impact brief (analyst / PM audience, no code) | the user |
 | PreToolUse hook (gate) | every `Edit`/`Write`/`MultiEdit` on a guarded file | automatically (blocks if no fresh covering report) |
 | MCP `get_blast_radius` | the agent needs the full scope and to persist coverage for the gate | the agent (only MCP tool that writes the report) |
 | MCP `get_affected_tests` / `get_public_api_diff` / `get_irreversible_ops` | the agent needs a scoped, advisory answer without persisting | the agent |
