@@ -1,21 +1,21 @@
 #!/usr/bin/env node
 'use strict';
 /**
- * Serveur MCP seismo-impact — transport stdio JSON-RPC 2.0, ZÉRO dépendance.
+ * seismo-impact MCP server — stdio JSON-RPC 2.0 transport, ZERO dependencies.
  *
- * Expose 4 tools qui appellent le MÊME lib/analyze.js que la CLI. SEUL
- * `get_blast_radius` — le tool qui définit le périmètre AVANT une édition —
- * persiste .impact/latest.json et nourrit ainsi le gate PreToolUse. Les trois
- * autres sont des requêtes advisory (tests, diff d'API, opérations
- * irréversibles) : elles calculent et renvoient SANS écraser la couverture,
- * sinon un appel à scope réduit effacerait le périmètre que blast_radius vient
- * d'établir et le gate bloquerait un fichier pourtant analysé.
- * L'agent interroge (advisory) ; le hook exécute (déterministe). MCP ne
- * remplace pas le gate, il le nourrit.
+ * Exposes 4 tools that call the SAME lib/analyze.js as the CLI. ONLY
+ * `get_blast_radius` — the tool that defines the scope BEFORE an edit —
+ * persists .impact/latest.json and thereby feeds the PreToolUse gate. The
+ * other three are advisory queries (tests, API diff, irreversible operations):
+ * they compute and return WITHOUT overwriting the coverage, otherwise a
+ * narrower-scoped call would wipe out the scope blast_radius just established
+ * and the gate would block a file that was in fact analyzed.
+ * The agent queries (advisory); the hook enforces (deterministic). MCP does
+ * not replace the gate, it feeds it.
  *
- * stdout est RÉSERVÉ au protocole (messages JSON-RPC ligne par ligne). Tout
- * diagnostic va sur stderr. lib/analyze.js n'écrit jamais sur stdout et git
- * tourne en pipe capturé, donc la sortie reste propre.
+ * stdout is RESERVED for the protocol (line-by-line JSON-RPC messages). All
+ * diagnostics go to stderr. lib/analyze.js never writes to stdout and git runs
+ * in a captured pipe, so the output stays clean.
  */
 const engine = require('../../../lib/analyze');
 
@@ -23,20 +23,20 @@ const PROTOCOL = '2024-11-05';
 const SERVER = { name: 'seismo-impact', version: '0.1.0' };
 const REPORT = '.impact/report.md';
 
-// --- Les 4 tools : schéma d'entrée + implémentation (slice de engine.run). ---
-// Chaque `run` appelle engine.run() puis engine.persist() — l'écriture de
-// l'artefact est ce qui rend l'analyse opposable au gate.
+// --- The 4 tools: input schema + implementation (slice of engine.run). ---
+// Each `run` calls engine.run() then engine.persist() — writing the artifact
+// is what makes the analysis enforceable by the gate.
 const TOOLS = [
   {
     name: 'get_blast_radius',
     description:
-      "Périmètre d'impact d'un symbole ou d'un fichier : appelants (call sites), couplage historique git, consommateurs cross-repo, niveau de risque. Écrit .impact/latest.json (nourrit le gate PreToolUse).",
+      "Impact scope of a symbol or a file: callers (call sites), git historical coupling, cross-repo consumers, risk level. Writes .impact/latest.json (feeds the PreToolUse gate).",
     inputSchema: {
       type: 'object',
       properties: {
-        symbols: { type: 'array', items: { type: 'string' }, description: 'noms de symboles (types, méthodes)' },
-        files: { type: 'array', items: { type: 'string' }, description: 'fichiers dont on infère les symboles à défaut' },
-        root: { type: 'string', description: 'racine du repo (défaut : cwd)' },
+        symbols: { type: 'array', items: { type: 'string' }, description: 'symbol names (types, methods)' },
+        files: { type: 'array', items: { type: 'string' }, description: 'files whose symbols are inferred when none are given' },
+        root: { type: 'string', description: 'repo root (default: cwd)' },
       },
     },
     run(a) {
@@ -58,12 +58,12 @@ const TOOLS = [
   {
     name: 'get_affected_tests',
     description:
-      'Tests concernés par un diff ou des fichiers : structuraux (référencent le symbole modifié) + historiques (co-changés en git). Requête advisory : n\'écrase pas .impact/latest.json.',
+      'Tests affected by a diff or files: structural (reference the modified symbol) + historical (co-changed in git). Advisory query: does not overwrite .impact/latest.json.',
     inputSchema: {
       type: 'object',
       properties: {
-        diff: { type: 'boolean', description: 'analyser le diff courant' },
-        base: { type: 'string', description: 'branche/ref de base (défaut : origin/main)' },
+        diff: { type: 'boolean', description: 'analyze the current diff' },
+        base: { type: 'string', description: 'base branch/ref (default: origin/main)' },
         files: { type: 'array', items: { type: 'string' } },
         root: { type: 'string' },
       },
@@ -76,11 +76,11 @@ const TOOLS = [
   {
     name: 'get_public_api_diff',
     description:
-      'Diff avant/après de la surface publique entre la branche courante et une base : `breaking` liste les éléments publics retirés ou dont la signature change (endpoints ASP.NET/FastEndpoints/Minimal API, contrats) ; `publicSurface` liste la surface touchée. Requête advisory : n\'écrase pas .impact/latest.json.',
+      'Before/after diff of the public surface between the current branch and a base: `breaking` lists public elements removed or whose signature changes (ASP.NET/FastEndpoints/Minimal API endpoints, contracts); `publicSurface` lists the affected surface. Advisory query: does not overwrite .impact/latest.json.',
     inputSchema: {
       type: 'object',
       properties: {
-        base: { type: 'string', description: 'branche/ref de base à comparer' },
+        base: { type: 'string', description: 'base branch/ref to compare against' },
         root: { type: 'string' },
       },
       required: ['base'],
@@ -93,7 +93,7 @@ const TOOLS = [
   {
     name: 'get_irreversible_ops',
     description:
-      'Opérations non annulables dans un diff : DROP COLUMN, migrations destructives, effets de bord (mails, paiements, jobs). Renvoie aussi le seuil de gate correspondant. Requête advisory : n\'écrase pas .impact/latest.json.',
+      'Non-undoable operations in a diff: DROP COLUMN, destructive migrations, side effects (emails, payments, jobs). Also returns the corresponding gate threshold. Advisory query: does not overwrite .impact/latest.json.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -115,7 +115,7 @@ const TOOLS = [
 ];
 const BY_NAME = Object.fromEntries(TOOLS.map(t => [t.name, t]));
 
-// --- Boucle JSON-RPC 2.0 sur stdio (messages délimités par des sauts de ligne). ---
+// --- JSON-RPC 2.0 loop over stdio (newline-delimited messages). ---
 function send(msg) {
   process.stdout.write(JSON.stringify(msg) + '\n');
 }
@@ -129,12 +129,12 @@ function rpcError(id, code, message) {
 function handle(msg) {
   const { id, method, params } = msg;
 
-  // Notifications : pas d'`id`, aucune réponse attendue.
+  // Notifications: no `id`, no response expected.
   if (method === 'notifications/initialized' || method === 'notifications/cancelled') return;
 
   if (method === 'initialize') {
-    // On renvoie la version demandée par le client si fournie, pour maximiser
-    // la compatibilité ; sinon notre version supportée.
+    // We return the version requested by the client if provided, to maximize
+    // compatibility; otherwise our supported version.
     return ok(id, {
       protocolVersion: (params && params.protocolVersion) || PROTOCOL,
       capabilities: { tools: {} },
@@ -158,14 +158,14 @@ function handle(msg) {
       const out = tool.run((params && params.arguments) || {});
       return ok(id, { content: [{ type: 'text', text: JSON.stringify(out) }] });
     } catch (e) {
-      // Erreur applicative (repo non git, symbole absent…) : renvoyée comme
-      // résultat `isError` et non erreur de protocole, pour que l'agent lise
-      // le message plutôt que de recevoir une panne de transport.
+      // Application error (not a git repo, missing symbol…): returned as an
+      // `isError` result rather than a protocol error, so the agent reads the
+      // message instead of getting a transport failure.
       return ok(id, { content: [{ type: 'text', text: `error: ${e.message}` }], isError: true });
     }
   }
 
-  // Méthode inconnue avec id : erreur standard. Notification inconnue : ignorée.
+  // Unknown method with id: standard error. Unknown notification: ignored.
   if (id !== undefined && id !== null) rpcError(id, -32601, `method not found: ${method}`);
 }
 
@@ -182,11 +182,11 @@ process.stdin.on('data', chunk => {
     try {
       msg = JSON.parse(line);
     } catch {
-      continue; // ligne non-JSON : ignorée, jamais fatale
+      continue; // non-JSON line: ignored, never fatal
     }
     handle(msg);
   }
 });
-// stdin fermé anormalement : ne pas jeter d'exception non capturée.
+// stdin closed abnormally: do not throw an uncaught exception.
 process.stdin.on('error', () => process.exit(0));
 process.stdin.on('end', () => process.exit(0));

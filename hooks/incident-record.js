@@ -1,22 +1,21 @@
 #!/usr/bin/env node
 'use strict';
 /**
- * Hook POST-incident d'seismo-memory — alimente le store à partir des commits
- * de revert. Ce n'est PAS un hook Claude Code (les incidents surviennent en
- * ops/deploy, pas pendant l'édition) : c'est un hook git post-merge ou une
- * étape CI. Il tourne HORS du chemin d'analyse read-only, donc aucune boucle
- * avec le gate.
+ * seismo-memory POST-incident hook — feeds the store from revert commits.
+ * This is NOT a Claude Code hook (incidents happen in ops/deploy, not during
+ * editing): it is a post-merge git hook or a CI step. It runs OUTSIDE the
+ * read-only analysis path, so there is no loop with the gate.
  *
- * Câblage git (dans le repo cible, .git/hooks/post-merge) :
+ * Git wiring (in the target repo, .git/hooks/post-merge):
  *   #!/bin/sh
  *   node "$CLAUDE_PLUGIN_ROOT/hooks/incident-record.js"
  *
- * Ou en CI, après un rollback/déploiement :
+ * Or in CI, after a rollback/deployment:
  *   node <plugin>/hooks/incident-record.js
  *
- * Variables : SEISMO_ROOT (racine du repo, défaut cwd), SEISMO_REVERT_DEPTH
- * (profondeur d'historique, défaut 200). No-op silencieux si memoryPath n'est
- * pas configuré ou hors repo git. JAMAIS bloquant : sort toujours en 0.
+ * Variables: SEISMO_ROOT (repo root, default cwd), SEISMO_REVERT_DEPTH
+ * (history depth, default 200). Silent no-op if memoryPath is not configured
+ * or outside a git repo. NEVER blocking: always exits 0.
  */
 const engine = require('../lib/analyze');
 const config = require('../lib/config');
@@ -26,9 +25,9 @@ try {
   const cfg = config.load(root);
   const depth = Number(process.env.SEISMO_REVERT_DEPTH) > 0 ? Number(process.env.SEISMO_REVERT_DEPTH) : 200;
   const { added, reverts } = engine.recordFromReverts(cfg, root, depth);
-  // Diagnostic sur stderr uniquement (un hook ne doit pas polluer stdout).
+  // Diagnostics on stderr only (a hook must not pollute stdout).
   if (added) process.stderr.write(`[seismo-cc] seismo-memory: ${added} incident(s) recorded from ${reverts} revert commit(s)\n`);
 } catch {
-  // Un hook d'historique ne doit jamais casser un merge ou un pipeline.
+  // A history hook must never break a merge or a pipeline.
 }
 process.exit(0);

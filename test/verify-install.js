@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 'use strict';
 /**
- * Vérifie qu'aucun fichier du plugin ne manque. À lancer en premier après une
- * installation ou une copie manuelle : un module absent produit une erreur
- * `Cannot find module` peu bavarde, alors que le diagnostic est trivial.
+ * Verifies that no plugin file is missing. Run this first after an
+ * installation or a manual copy: a missing module produces an unhelpful
+ * `Cannot find module` error, whereas the diagnosis is trivial.
  *
  *   node test/verify-install.js
  */
@@ -37,7 +37,7 @@ let missing = 0, broken = 0;
 for (const rel of REQUIRED) {
   const p = path.join(ROOT, rel);
   if (!fs.existsSync(p)) {
-    console.log(`  MANQUE   ${rel}`);
+    console.log(`  MISSING  ${rel}`);
     missing++;
     continue;
   }
@@ -48,24 +48,24 @@ for (const rel of REQUIRED) {
   console.log(`  ok       ${rel}`);
 }
 
-// Les require() du CLI sont la source d'erreur la plus fréquente après une
-// copie partielle : on les résout réellement plutôt que de tester l'existence.
+// The CLI's require() calls are the most frequent source of error after a
+// partial copy: we actually resolve them rather than testing for existence.
 try {
   require(path.join(ROOT, 'lib', 'config'));
   require(path.join(ROOT, 'lib', 'git'));
   require(path.join(ROOT, 'lib', 'scan'));
   require(path.join(ROOT, 'lib', 'rules'));
   require(path.join(ROOT, 'lib', 'report'));
-  console.log('\n  les 5 modules se chargent correctement');
+  console.log('\n  all 5 modules load correctly');
 } catch (e) {
-  console.log(`\n  CHARGEMENT KO — ${e.message}`);
+  console.log(`\n  LOADING FAILED — ${e.message}`);
   broken++;
 }
 
 console.log('');
 if (missing || broken) {
-  console.log(`${missing} fichier(s) manquant(s), ${broken} problème(s) de chargement.`);
-  console.log('Récupère l\'archive complète plutôt que les fichiers un par un.');
+  console.log(`${missing} missing file(s), ${broken} loading problem(s).`);
+  console.log('Grab the complete archive rather than the files one by one.');
   process.exit(1);
 }
-console.log('Installation complète. Lance ensuite ./test/smoke.sh');
+console.log('Installation complete. Next, run ./test/smoke.sh');

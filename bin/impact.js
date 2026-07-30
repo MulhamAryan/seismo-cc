@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 'use strict';
 /**
- * seismo-cc — analyse d'impact avant modification.
+ * seismo-cc — impact analysis before modifying.
  *
- * Zéro dépendance, aucun index, aucun serveur : le but est de pouvoir tomber
- * dans n'importe quel repo sans installation.
+ * Zero dependencies, no index, no server: the goal is to be able to drop into
+ * any repo without installation.
  *
  *   impact analyze --symbols DispenseOrder,OrderService
  *   impact analyze --files src/Foo.cs
@@ -19,8 +19,8 @@ const engine = require('../lib/analyze');
 const git = require('../lib/git');
 const memory = require('../lib/memory');
 
-// Le coeur du calcul vit dans lib/analyze.js, partagé avec le serveur MCP.
-// Le gate réutilise la même empreinte de contenu que l'analyse.
+// The core computation lives in lib/analyze.js, shared with the MCP server.
+// The gate reuses the same content hash as the analysis.
 const { hashContent } = engine;
 
 function parseArgs(argv) {
@@ -40,9 +40,9 @@ function parseArgs(argv) {
 
 // ---------------------------------------------------------------------------
 
-// Transport CLI : délègue le calcul à engine.run(), persiste l'artefact, puis
-// formate stdout. Le coeur (résolution, couplage, risque) vit dans
-// lib/analyze.js — partagé tel quel avec le serveur MCP seismo-impact.
+// CLI transport: delegates the computation to engine.run(), persists the
+// artifact, then formats stdout. The core (resolution, coupling, risk) lives in
+// lib/analyze.js — shared as-is with the seismo-impact MCP server.
 function analyze(args) {
   const data = engine.run({
     root: args.root,
@@ -56,8 +56,8 @@ function analyze(args) {
 
   const statusLine = `(report written to .impact/report.md — ${data.filesScanned} files scanned)`;
   if (args.json) {
-    // stdout doit rester du JSON pur et parsable : la ligne de statut part sur
-    // stderr, sinon `impact analyze --json | jq` casse.
+    // stdout must stay pure, parsable JSON: the status line goes to stderr,
+    // otherwise `impact analyze --json | jq` breaks.
     process.stdout.write(JSON.stringify(data, null, 2) + '\n');
     process.stderr.write(statusLine + '\n');
   } else if (args.short) {
@@ -73,9 +73,9 @@ function analyze(args) {
 // ---------------------------------------------------------------------------
 
 /**
- * gate : appelé par le hook PreToolUse. Vérifie qu'un rapport frais couvre
- * le fichier que l'agent veut modifier. Sort en code 1 si le garde-fou doit
- * bloquer ; le hook traduit ça en exit 2 pour Claude Code.
+ * gate: called by the PreToolUse hook. Checks that a fresh report covers the
+ * file the agent wants to modify. Exits with code 1 if the guard must block;
+ * the hook translates that into exit 2 for Claude Code.
  */
 function gate(args) {
   const root = path.resolve(args.root || process.cwd());
@@ -83,8 +83,8 @@ function gate(args) {
   const file = args.file && args.file !== true ? args.file : null;
   const p = path.join(root, '.impact', 'latest.json');
 
-  // Le message doit être copiable-collable depuis le repo de travail, donc il
-  // faut le chemin du plugin, pas un chemin relatif à l'outil.
+  // The message must be copy-pasteable from the working repo, so it needs the
+  // plugin path, not a path relative to the tool.
   const pluginRoot = process.env.CLAUDE_PLUGIN_ROOT || path.resolve(__dirname, '..');
   const cmd = f => `node "${pluginRoot}/bin/impact.js" analyze --files ${f} --short`;
 
@@ -119,10 +119,10 @@ function gate(args) {
       return;
     }
 
-    // Le fichier est dans le périmètre : le rapport décrit-il encore SON
-    // contenu actuel ? Sans cette vérification, il suffit d'analyser une fois
-    // puis de tout réécrire avant l'expiration du rapport pour passer à
-    // l'aveugle. On compare les empreintes.
+    // The file is in scope: does the report still describe ITS current
+    // content? Without this check, you could analyze once and then rewrite
+    // everything before the report expires to slip through blind. We compare
+    // the hashes.
     const hashes = data.fileHashes || {};
     let current = null;
     try {
@@ -131,8 +131,8 @@ function gate(args) {
       current = null;
     }
     if (!hashes[rel]) {
-      // Rapport antérieur à l'empreinte de contenu, ou fichier non empreinté :
-      // impossible de garantir la fraîcheur. On exige une réanalyse.
+      // Report predates content hashing, or the file was not hashed:
+      // freshness cannot be guaranteed. We require a re-analysis.
       fail(`\`${rel}\` is covered but has no content hash in the report.\nRun: ${cmd(rel)}`);
       return;
     }
@@ -159,12 +159,12 @@ function fail(msg) {
 // ---------------------------------------------------------------------------
 
 /**
- * record : écrivain d'seismo-memory. Appelé HORS du chemin d'analyse read-only
- * — par un humain en post-mortem, un job CI, ou le git hook post-merge
- * (hooks/incident-record.js). Deux modes :
- *   record --from-reverts        auto : mine les commits `git revert` récents
- *   record --file X --kind ...   manuel : un incident précis
- * Idempotent (recordMany dédoublonne), donc rejouable sans risque.
+ * record: seismo-memory writer. Called OUTSIDE the read-only analysis path —
+ * by a human during a post-mortem, a CI job, or the post-merge git hook
+ * (hooks/incident-record.js). Two modes:
+ *   record --from-reverts        auto: mines recent `git revert` commits
+ *   record --file X --kind ...   manual: one specific incident
+ * Idempotent (recordMany deduplicates), so it is safe to replay.
  */
 function record(args) {
   const root = path.resolve(args.root || process.cwd());
@@ -182,7 +182,7 @@ function record(args) {
     return;
   }
 
-  // Mode manuel : un incident explicite.
+  // Manual mode: an explicit incident.
   const inc = {};
   if (args.symbol && args.symbol !== true) inc.symbol = args.symbol;
   if (args.file && args.file !== true) inc.file = args.file;
