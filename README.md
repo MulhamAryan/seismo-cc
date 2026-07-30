@@ -258,7 +258,7 @@ Repo `sample-service` · branch `master` · HEAD `46990922`
 - `tests/Domain.Tests/CheckoutTests.cs` — references Checkout _(structural)_
 ```
 
-The full report also includes a "Blind spots" section reminding you what the analysis does not see (reflection, convention-based DI, database-driven jobs, etc.). See [Known limitations](#known-limitations--read-before-trusting-it).
+The full report also includes a "Hidden-dependency checks" section — advisory lexical scans that actively search for part of the blind-spot surface (the symbol name in string literals for reflection/DI, an entity's table name in SQL, reflection/convention-DI constructs, concatenated routes) — followed by a "Blind spots" section reminding you what the analysis still does not see (database-driven jobs, unnamed view bindings, etc.). The hidden-dependency checks are advisory and never affect the risk level. See [Known limitations](#known-limitations--read-before-trusting-it) and [`docs/ROADMAP.md`](docs/ROADMAP.md).
 
 ## The machine format — `.impact/latest.json`
 
@@ -276,6 +276,7 @@ The hook and any programmatic consumer read this file. Main fields:
 | `irreversible[]` | array | `id, label, weight, where, evidence` |
 | `tests[]` | array | `file, reasons[], confidence` |
 | `priorHints[]` | array | `target, kind, incidents, lastRef, lastAt, hint` — **advisory** prior-incident context (empty unless `memoryPath` is set) |
+| `hiddenChecks[]` | array | `kind, symbol?, file, line, evidence` — **advisory** hidden-dependency findings (`reflection-string`, `sql-table`, `dynamic-construct`, `route-concat`); computed after risk, never affects it |
 | `crossRepo[]` | array | `repo, symbol, files, sample` — consumer repos |
 | `externalConsumers[]` | array | consumers declared in the config |
 | `changedFiles[]` | array | files in the input scope |

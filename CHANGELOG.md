@@ -27,6 +27,14 @@ follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   inflated on merge-heavy histories.
 
 ### Added
+- **Hidden-dependency checks (P1).** Advisory lexical scans that shrink the
+  blind-spot list by reporting what the reference search cannot see: the symbol
+  name inside string literals (reflection / DI / serialization / config), an
+  entity's table name in SQL (hardcoded SQL), reflection / convention-DI
+  constructs, and routes built by concatenation. Computed after the risk verdict
+  and never fed back — the gate stays deterministic. New report section
+  "Hidden-dependency checks" and `hiddenChecks[]` in `latest.json`
+  (`lib/hidden.js`). See `docs/ROADMAP.md`.
 - **MCP transport (`seismo-impact`).** A zero-dependency stdio JSON-RPC 2.0 server
   over the same engine, exposing four tools: `get_blast_radius` (the only one that
   persists `.impact/latest.json` and feeds the gate), `get_affected_tests`,

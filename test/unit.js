@@ -132,3 +132,28 @@ t('Memory: priorHints surfaces the file incident',
 t('Memory: priorHints empty when no incident', memory.priorHints({ incidents: [] }, [], ['x']).length === 0);
 // load: memoryPath null => empty memory, never an exception (graceful degradation).
 t('Memory: memoryPath null => empty', memory.load({ memoryPath: null }, memDir).incidents.length === 0);
+
+// --- P1: hidden-dependency checks (advisory) ---
+const hidden = require('../lib/hidden');
+const hdir = fs.mkdtempSync(path.join(os.tmpdir(), 'seismo-hidden-'));
+fs.writeFileSync(path.join(hdir, 'a.cs'), [
+  'namespace N {',
+  ' public class OrderService {',
+  '  void M(string id) {',
+  '   var t = Type.GetType("N.OrderService");',                       // reflection + name-in-string
+  '   Db.Database.ExecuteSqlRaw("SELECT * FROM OrderServices WHERE Id = 1");', // sql-table (OrderService+s)
+  '   var url = "/api/" + id;',                                       // route built by concatenation
+  '  }',
+  ' }',
+  '}',
+].join('\n'));
+const hSyms = [{ name: 'OrderService', kind: 'type', declFile: 'a.cs' }];
+const hRes = hidden.check(hdir, ['a.cs'], hSyms, ['a.cs']);
+const hHas = k => hRes.some(h => h.kind === k);
+t('P1: reflection-string detected', hRes.some(h => h.kind === 'reflection-string' && h.symbol === 'OrderService'));
+t('P1: sql-table detected', hRes.some(h => h.kind === 'sql-table' && h.symbol === 'OrderService'));
+t('P1: dynamic-construct (reflection) detected', hHas('dynamic-construct'));
+t('P1: route-concat detected', hHas('route-concat'));
+// Prose strings must NOT be flagged as a reflection reference (noise control).
+fs.writeFileSync(path.join(hdir, 'b.cs'), 'class X { void M(){ Log("OrderService failed to start now"); } }\n');
+t('P1: prose string not flagged', hidden.stringMentions(hdir, ['b.cs'], ['OrderService']).length === 0);

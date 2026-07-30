@@ -20,6 +20,7 @@ If you want to understand the tool conceptually, read in order. If you are here 
 | 07 | [Git Historical Coupling](07-git-historical-coupling.md) | The tool's strongest, language-agnostic signal: support, co-change, ratio, windowing, merge dedup, thresholds, with a worked micro-example. |
 | 08 | [Configuration Reference](08-configuration-reference.md) | Every configuration field, its default and effect; calibration guidance; environment variables. |
 | 09 | [Limitations & Validity](09-limitations-and-validity.md) | A self-critical, research-grade account of what the tool does **not** compute, its precision/recall threats, and the path to higher rigor. |
+| — | [Roadmap](ROADMAP.md) | Planned work, ordered by ROI: hidden-dependency checks (P1, shipped), empirical validation, transitive impact, resolved graph, runtime confirmation. |
 
 ## Notation used across the documents
 

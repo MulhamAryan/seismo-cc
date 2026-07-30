@@ -336,7 +336,25 @@ flowchart TD
 
 ---
 
-## 6. Advisory memory
+## 6. Advisory layers (memory + hidden-dependency checks)
+
+Two layers share the same **advisory contract**: both are computed *after* the
+risk verdict and are **never fed back** into it, so the gate stays deterministic.
+
+### 6.0 Hidden-dependency checks (`lib/hidden.js`)
+
+Cheap, build-free lexical scans (P1 in [ROADMAP.md](ROADMAP.md)) that shrink the
+"Blind spots" list by *reporting* what the reference search cannot see, instead of
+only listing it: the symbol name inside string literals (`reflection-string` —
+reflection / DI / serialization / config), an entity's table name in SQL
+(`sql-table` — hardcoded SQL), reflection / convention-DI constructs
+(`dynamic-construct`), and routes built by concatenation (`route-concat`).
+Computed at `lib/analyze.js` right after `priorHints`, returned as
+`hiddenChecks[]`, rendered as the "Hidden-dependency checks" section
+(`lib/report.js`). Each finding is a *possible* dependency, never proof, and it
+does **not** enter `riskLevel` or the gate.
+
+### 6.1 seismo-memory
 
 `seismo-memory` (`lib/memory.js`) is an **optional, advisory** history layer.
 
