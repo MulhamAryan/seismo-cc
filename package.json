@@ -1,6 +1,6 @@
 {
   "name": "seismo-cc",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Impact analysis before modifying code, for Claude Code: callers, git historical coupling, public surface, irreversible operations, affected tests. Zero dependencies.",
   "license": "Apache-2.0",
   "type": "commonjs",

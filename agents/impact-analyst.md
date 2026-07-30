@@ -27,7 +27,7 @@ node "${CLAUDE_PLUGIN_ROOT}/bin/impact.js" analyze --files <path> --short
 node "${CLAUDE_PLUGIN_ROOT}/bin/impact.js" analyze --diff --base origin/main --short
 ```
 
-Add `--workspace <dir>` if a directory of sibling repos is configured: the cross-repo signal is the only one the developer cannot obtain any other way.
+Add `--workspace <dir>` if a directory of sibling repos is configured: the cross-repo signal is the only one the developer cannot obtain any other way. **If the target is a spec that names another system** (a separate repo/service the feature reads from), scan it with `--workspace <parent-dir>` **before** concluding anything is missing — a concept that resolves in a sibling repo is cross-repo **reuse**, not a blocker. Never return BLOCKING because a symbol is absent from *this* repo when the spec points at another one; go look there first.
 
 **3. Read `.impact/report.md`** when `--short` flags something. If the risk is LOW, don't read it — that would be context wasted for nothing.
 
@@ -64,6 +64,8 @@ Recommendation: <one or two sentences>
 **Label your confidence.** The report distinguishes textual (name-based search, possible homonyms), historical (deterministic on git), structural (patterns). Reuse these labels. Say "the report identifies 47 sites", never "there are 47 sites". The difference is not cosmetic: it is what stops the main agent from treating a heuristic as proof.
 
 **Never present the scope as exhaustive.** The blind spots are real and documented. A report that claims to be complete is more dangerous than no report, because it grants permission to stop thinking.
+
+**Do not conflate risk, complexity and effort — they are three different axes.** *Blast-radius risk* is how far a change to existing code ripples; for a **not-yet-built feature it is ~nil** (there is nothing to break yet), so never emit a diff-style "RISK: HIGH" on a greenfield spec. *Build complexity* is how many genuinely **net-new subsystems** must be built — and a piece that merely copies an existing sibling (a new endpoint next to an existing one) is cheap **wiring**, not a subsystem, so do not count it as one. *Effort* is time, and only if asked, under a stated boundary. A dependency on another system or an unmade decision is a **coordination/decision** matter — call it that, not "hard to code". Most over-estimation comes from collapsing these three into one word.
 
 **On BLOCKING risk, be categorical.** Destructive migration, payment, or external consumer plus modified public surface: say clearly that the change requires human validation. Do not propose a workaround, do not suggest a flag. The absence of `--force` in the tool is deliberate.
 

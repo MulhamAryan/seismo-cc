@@ -6,6 +6,31 @@ follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.2.1] — 2026-07-30
+
+### Fixed
+- **Over-estimation on greenfield specs.** `brief`, `scope` and the analyst
+  conflated three orthogonal axes under one word ("HIGH"), so a not-yet-built
+  feature read as "hard to code". They now keep them separate: **blast-radius
+  risk** (how far a change to existing code ripples — ~nil for greenfield),
+  **build complexity** (net-new *subsystems* only), and **effort** (time, only
+  if asked). A dependency on another system or an unmade decision is now framed
+  as a coordination/decision matter, not coding difficulty.
+- **Net-new counted at equal weight.** A concept with no local symbol but a
+  same-kind sibling to copy (a new endpoint next to an existing one) is now
+  classified as cheap **wiring**, not a net-new subsystem. Complexity counts
+  net-new *subsystems* only, so a ten-line copy no longer inflates the size.
+- **False "everything is net-new / BLOCKING" across repos.** `brief`/`scope`/the
+  analyst now scan sibling repos with `--workspace` when the spec names another
+  system, before concluding anything is missing: a concept that resolves in a
+  sibling is **cross-repo reuse**, not net-new. The analyst no longer returns
+  BLOCKING because a symbol is absent from *this* repo when the spec points at
+  another one.
+- **Unbounded time estimates.** When a number is asked for, it must now state a
+  fixed boundary — `git checkout → git push` by a developer who knows the repo,
+  excluding deployment, production migration, acceptance and cross-team
+  coordination — instead of silently mixing those in.
+
 ## [0.2.0] — 2026-07-30
 
 ### Fixed

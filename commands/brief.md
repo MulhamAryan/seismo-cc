@@ -11,20 +11,23 @@ Produce an **impact brief for a decision-maker** (analyst, project manager, lead
 ## Step 0 — is this a change, or a not-yet-built spec?
 
 - If `$ARGUMENTS` names an existing symbol / file, or is `--diff` → **change mode**.
-- If `$ARGUMENTS` is a feature description (a spec, several sentences) → **greenfield mode**: nothing is built yet, so the diff is empty and the tool's risk/caller numbers will be ~zero. **Do not report a misleadingly small size from that.** Instead size the work by how many building blocks must be built vs reused (Step 2b).
+- If `$ARGUMENTS` is a feature description (a spec, several sentences) → **greenfield mode**: nothing is built yet, so the diff is empty and the tool's risk/caller numbers will be ~zero. **Do not report a misleadingly small size from that, and do not report a diff-style "RISK: HIGH" either** — for a not-yet-built feature the blast-radius risk is essentially nil (there is no code to break). Size the work by how many building blocks must be built vs reused (Step 2b), and keep that separate from risk.
+
+**Keep three axes separate — never collapse them into one word:** (1) **blast-radius risk** (how far a change to existing code ripples — ~nil for greenfield), (2) **build complexity** (how much genuinely new machinery — counts net-new *subsystems*, not every concept), (3) **effort** (time, only if asked, under a named boundary). A dependency on another system or an unmade decision is a **coordination/decision** matter, not build complexity and not blast radius.
 
 ## Step 1 — get grounded data (never invent numbers)
 
 Delegate to the `impact-analyst` subagent, or run it yourself.
 
 - **Change mode:** analyze the target (or the current diff vs `origin/main` if empty).
-- **Greenfield mode:** extract the concrete concepts from the spec — the entities, screens, modules and integrations it names (e.g. "candidate status", "documents module", "internal messaging", "photo", "loge tags") — and search the codebase for each, so every claim is grounded, not guessed:
+- **Greenfield mode:** extract the concrete concepts from the spec — the entities, screens, modules and integrations it names (e.g. "candidate status", "documents module", "internal messaging", "photo", "loge tags") — and search the codebase for each. **If the spec names another system** (a separate repo/service the feature reads from) or a workspace is configured, add `--workspace <dir>` so concepts resolve across sibling repos too — a concept that lives in a sibling is **reuse (cross-repo)**, not net-new. Skipping this produces a false "everything is net-new / BLOCKING" verdict.
 
 ```bash
 node "${CLAUDE_PLUGIN_ROOT}/bin/impact.js" analyze --symbols <Concept1,Concept2,…> --json
+node "${CLAUDE_PLUGIN_ROOT}/bin/impact.js" analyze --symbols <…> --workspace <parent-of-sibling-repos> --json
 ```
 
-Read `.impact/latest.json`. A concept whose symbol resolves (has a `declFile` / callers) is a **reusable anchor**; a concept that does not resolve anywhere is **net-new** (say so, and flag it "to confirm with someone who knows the screens" — reflection/ORM-by-name can hide a real anchor).
+Read `.impact/latest.json` (`symbols[]`, `crossRepo`). Classify each concept into: **reuse** (resolves here), **reuse (cross-repo)** (resolves in a sibling), **wiring** (does not resolve but a same-kind sibling does and the new piece is a copy of it — e.g. a new endpoint next to an existing one — cheap), or **net-new subsystem** (no anchor, no pattern to copy — real). Flag every unresolved one "to confirm with someone who knows the screens" (reflection/ORM-by-name can hide a real anchor).
 
 ## Step 2 — separate what the tool MEASURED from what you ESTIMATE
 
@@ -37,24 +40,28 @@ State this split explicitly in the brief. It is the whole point of being honest:
 
 Give both, side by side, so the reader sees the shape:
 
-1. **Build scope (grounded):** `X reusable anchors / Y net-new pieces / Z infeasible-or-needs-a-decision`, listing what each is in plain words.
-2. **Complexity (estimate):** **Low / Medium / High** — High if ≥3 net-new subsystems or a hard feasibility/legal blocker; Medium if 1–2 net-new; Low if mostly reuse. Mark it "estimate, to confirm".
+1. **Build scope (grounded):** `<reuse> reused / <wiring> wiring / <subsystems> net-new subsystems / <n> infeasible-or-decision`, listing what each is in plain words. Wiring and cross-repo reuse are cheap — do not lump them with net-new subsystems.
+2. **Complexity (estimate):** **Low / Medium / High** — High if **≥3 net-new subsystems** or a hard feasibility/legal blocker; Medium if 1–2 net-new subsystems; Low if mostly reuse and wiring. **Count net-new subsystems only** — a ten-line copy of an existing pattern is wiring, not a subsystem. Mark it "estimate, to confirm".
 
-Do **not** translate this into developer-days: whether a human or an agent writes the code, the cost driver is the number of net-new subsystems and the decisions, not typing speed.
+And report **blast-radius risk separately** — Low for greenfield, because there is no existing code to break. Do not merge it into complexity.
+
+If the user asks for a **time estimate**, give a bounded number and **state the boundary**: `git checkout → git push`, by a developer who already knows the repo (code + local tests + commit) — **excluding** deployment, applying a migration in production, acceptance/recette, and cross-team coordination. Size from the tiers (reuse/wiring = minutes–hours, net-new subsystems = the real cost). If the boundary is not stated, do not give a number.
 
 ## Step 3 — write the brief (prose, one screen)
 
 ```
 Impact brief — <what is being proposed, in plain words>
 
-Bottom line: <risk in plain terms> · Build scope: <X reuse / Y net-new> · Complexity: <Low/Med/High, estimate> · <one-sentence decision>
+Bottom line: Build complexity <Low/Med/High, estimate> · <reuse>+<wiring> reused/wired, <subsystems> net-new · Blast-radius risk <Low for greenfield> · <one-sentence decision>
 
 Why this shape
-<2–4 sentences: what already exists to build on, what is genuinely new, what makes
-it risky or safe. The value is the causal why, in human language.>
+<2–4 sentences: what already exists to build on (here and in sibling repos), what is
+just wiring on an existing pattern, what is genuinely new, and what the real risk is
+— usually a coordination/decision matter, not coding difficulty. Causal, in human language.>
 
-Reusable vs net-new (grounded)
-<the anchors found in the code, and the pieces that must be built from scratch>
+Reused / wiring / net-new (grounded)
+<the anchors found (here or cross-repo), the cheap wiring copies, and the genuine
+net-new subsystems — kept distinct so the size is not inflated>
 
 Downstream & who to notify
 <consumer repos / external consumers / contacts, or "none detected">
