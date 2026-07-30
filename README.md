@@ -62,6 +62,8 @@ The subagent cannot write (`disallowedTools`), so the guard never triggers again
 
 ## Installation
 
+> Every install method (Claude Code marketplace, local plugin dir, another catalog, standalone CLI, MCP server, per-repo config) is documented in full in **[INSTALL.md](INSTALL.md)**. The essentials:
+
 ### From the marketplace (recommended)
 
 The repository **is** a Claude Code marketplace (`.claude-plugin/marketplace.json` at the root). Inside Claude Code:
