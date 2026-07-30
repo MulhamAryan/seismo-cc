@@ -1,4 +1,4 @@
-# Les scripts shell doivent rester en LF, même sur Windows.
+# Shell scripts must stay LF, even on Windows.
 *.sh text eol=lf
 *.js text eol=lf
 *.json text eol=lf

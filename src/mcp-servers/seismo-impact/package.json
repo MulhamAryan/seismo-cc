@@ -2,7 +2,7 @@
   "name": "seismo-impact-mcp",
   "version": "0.1.0",
   "private": true,
-  "description": "Serveur MCP stdio exposant l'analyse d'impact seismo-cc (lib/analyze.js) en 4 tools. Zéro dépendance : JSON-RPC 2.0 fait main.",
+  "description": "stdio MCP server exposing the seismo-cc impact analysis (lib/analyze.js) as 4 tools. Zero dependencies: hand-rolled JSON-RPC 2.0.",
   "bin": { "seismo-impact-mcp": "./index.js" },
   "main": "index.js",
   "engines": { "node": ">=18" },
