@@ -35,6 +35,10 @@ follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - **One-line marketplace install.** Ship `.claude-plugin/marketplace.json` at the
   repo root so it installs directly: `/plugin marketplace add MulhamAryan/seismo-cc`
   then `/plugin install seismo-cc@seismo-cc`.
+- **Two extra slash commands.** `/seismo-cc:tests` (affected tests only, structural
+  + historical) and `/seismo-cc:api-diff` (breaking public-surface changes vs a
+  base), alongside `/seismo-cc:impact` (full scope). All three delegate to the
+  read-only `impact-analyst` subagent.
 - **`INSTALL.md`** covering every method: Claude Code marketplace, local plugin dir,
   entry in another catalog, standalone CLI, MCP server, per-repo configuration.
 - **In-depth `docs/`.** Ten grounded documents (architecture, scientific concepts,

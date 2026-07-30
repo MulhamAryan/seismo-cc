@@ -199,9 +199,25 @@ The plugin bundles five activation surfaces, each triggered differently:
 | **PreToolUse hook** | `hooks/hooks.json` → `hooks/impact-gate.js` | Fires automatically on every `Edit\|Write\|MultiEdit` tool call, 30 s timeout (`hooks.json:3-14`). Deterministic; no model involvement. |
 | **Skill** | `skills/impact-analysis/SKILL.md` | Model-invoked by description match: it decides *when* to request analysis and *what to do with the verdict* (it does not analyze itself). Maps risk → action and tells the agent how to react when the guard blocks. |
 | **Subagent** | `agents/impact-analyst.md` | Read-only analyst (tools restricted to Read/Grep/Glob/Bash, write tools disallowed, `model: sonnet`). Launched via the Task tool so that reading many call sites burns *its* context, not the main session's. Runs the CLI `analyze --short` and reports ~15 dense lines in a fixed format. |
-| **Slash command** | `commands/impact.md` | `/seismo-cc:impact [symbol\|file\|--diff]`; delegates to the `impact-analyst` subagent, defaulting to the current diff vs `origin/main` when no argument is given. |
+| **Slash commands** | `commands/*.md` | Three manual entry points, all delegating to the `impact-analyst` subagent: `/seismo-cc:impact [symbol\|file\|--diff]` (full scope, defaulting to the current diff vs `origin/main` when no argument is given), `/seismo-cc:tests [symbol\|file\|--diff]` (only the affected tests, each labelled `structural`/`historical`), and `/seismo-cc:api-diff [--base <ref>]` (only the breaking public-surface changes vs a base). |
 
 The layering is intentional: the **hook** is the hard, deterministic floor (an edit is physically blocked without a fresh covering report); the **skill** and **subagent** are the soft, model-facing layer that guides the agent to produce that report *before* it hits the floor and to interpret the verdict honestly. The MCP `get_blast_radius` tool and the CLI `analyze` command are the two ways the covering artifact gets written; everything else reads it.
+
+### 6.1 Surfaces — when each is used
+
+The same engine is reachable through several surfaces; what differs is the trigger and who invokes it. The three slash commands are scoped views (full scope / tests only / breaking-change only), all delegating to the read-only subagent.
+
+| Surface | Triggered when | Invoked by |
+|---|---|---|
+| Skill `impact-analysis` | a task touches existing code, or the user asks "what's the impact / what does this break / is it risky", or before opening a PR | automatically (description match) |
+| Subagent `impact-analyst` | the skill or a slash command decides to delegate | launched via the Task tool |
+| `/seismo-cc:impact [symbol\|file\|--diff]` | manual request for the full impact scope | the user |
+| `/seismo-cc:tests [symbol\|file\|--diff]` | manual request for only the affected tests | the user |
+| `/seismo-cc:api-diff [--base <ref>]` | manual request for only breaking public-surface changes vs a base | the user |
+| PreToolUse hook (gate) | every `Edit`/`Write`/`MultiEdit` on a guarded file | automatically (blocks if no fresh covering report) |
+| MCP `get_blast_radius` | the agent needs the full scope and to persist coverage for the gate | the agent (only MCP tool that writes the report) |
+| MCP `get_affected_tests` / `get_public_api_diff` / `get_irreversible_ops` | the agent needs a scoped, advisory answer without persisting | the agent |
+| CLI `analyze` / `gate` / `record` | outside Claude Code — terminal, CI, git hook | user / CI |
 
 ---
 

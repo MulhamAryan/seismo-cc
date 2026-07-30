@@ -43,6 +43,24 @@ A single computation path and a single artifact are what guarantee the gate
 always sees the report the analysis just wrote, regardless of who triggered it
 (`lib/analyze.js:4-7`). See **01-architecture.md** for the transport topology.
 
+### How a run gets triggered inside Claude Code
+
+The user-facing entry points are three slash commands, all delegating to the
+read-only `impact-analyst` subagent, each a scoped view over this same pipeline:
+
+- `/seismo-cc:impact [symbol|file|--diff]` — the full impact scope.
+- `/seismo-cc:tests [symbol|file|--diff]` — only the affected tests
+  (`structural` + `historical`), the subset produced by Stage 4's
+  `rules.affectedTests`; conceptually the MCP `get_affected_tests` query.
+- `/seismo-cc:api-diff [--base <ref>]` — only the breaking public-surface
+  changes vs a base, i.e. `apiBreaking` from `computeApiBreaking` (§3, Stage 4);
+  conceptually the MCP `get_public_api_diff` query.
+
+The MCP query tools `get_affected_tests` / `get_public_api_diff` compute those
+same scoped answers **without** persisting, so they never overwrite the gate's
+coverage. For the full "surfaces — when each is used" table, see
+**01-architecture.md** §6.1.
+
 ---
 
 ## 2. Inputs: symbols vs files vs `--diff`/`--base`

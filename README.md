@@ -6,7 +6,7 @@ Impact analysis before modification. The plugin provides the following component
 |---|---|
 | `agents/impact-analyst.md` | **read-only subagent** — runs the analysis in its own context and returns ~15 lines |
 | `skills/impact-analysis/` | teaches the main agent **when** to delegate and **what to do** with the verdict |
-| `commands/impact.md` | `/seismo-cc:impact` for a manual invocation |
+| `commands/*.md` | three slash commands for manual invocation — `/seismo-cc:impact` (full scope), `/seismo-cc:tests` (affected tests only), `/seismo-cc:api-diff` (breaking public-surface changes only) |
 | `hooks/hooks.json` | **`PreToolUse` guard** that refuses an `Edit`/`Write` without a fresh report |
 | `lib/analyze.js` | **the engine** — `run(opts)` computes the impact `data` with **no side effects**; `persist(root, data)` writes the report. One code path, shared by every transport |
 | `bin/impact.js` | the **CLI transport** — a thin, zero-dependency Node wrapper that calls `run()` then `persist()` and formats stdout (`--json` / `--short` / md) |
@@ -62,6 +62,28 @@ The hook is what makes the difference between an agent that is *advised* and an 
 
 The subagent cannot write (`disallowedTools`), so the guard never triggers against it — no loop.
 
+## Commands and surfaces
+
+Three slash commands cover manual invocation, each a scoped view over the same engine; all three delegate to the read-only `impact-analyst` subagent:
+
+- `/seismo-cc:impact [symbol|file|--diff]` — the **full impact scope**: risk, callers, historical coupling, public surface, irreversible ops, affected tests.
+- `/seismo-cc:tests [symbol|file|--diff]` — **only the affected tests**, each labelled `structural` (references the symbol) or `historical` (git co-change), plus the command to run them.
+- `/seismo-cc:api-diff [--base <ref>]` — **only the breaking public-surface changes** vs a base (removed / changed endpoints, DTOs, hubs; additions excluded; base defaults to `origin/main`).
+
+When each surface is used:
+
+| Surface | Triggered when | Invoked by |
+|---|---|---|
+| Skill `impact-analysis` | a task touches existing code, or the user asks "what's the impact / what does this break / is it risky", or before opening a PR | automatically (description match) |
+| Subagent `impact-analyst` | the skill or a slash command decides to delegate | launched via the Task tool |
+| `/seismo-cc:impact [symbol\|file\|--diff]` | manual request for the full impact scope | the user |
+| `/seismo-cc:tests [symbol\|file\|--diff]` | manual request for only the affected tests | the user |
+| `/seismo-cc:api-diff [--base <ref>]` | manual request for only breaking public-surface changes vs a base | the user |
+| PreToolUse hook (gate) | every `Edit`/`Write`/`MultiEdit` on a guarded file | automatically (blocks if no fresh covering report) |
+| MCP `get_blast_radius` | the agent needs the full scope and to persist coverage for the gate | the agent (only MCP tool that writes the report) |
+| MCP `get_affected_tests` / `get_public_api_diff` / `get_irreversible_ops` | the agent needs a scoped, advisory answer without persisting | the agent |
+| CLI `analyze` / `gate` / `record` | outside Claude Code — terminal, CI, git hook | user / CI |
+
 ## Installation
 
 > Every install method (Claude Code marketplace, local plugin dir, another catalog, standalone CLI, MCP server, per-repo config) is documented in full in **[INSTALL.md](INSTALL.md)**. The essentials:
@@ -75,7 +97,7 @@ The repository **is** a Claude Code marketplace (`.claude-plugin/marketplace.jso
 /plugin install seismo-cc@seismo-cc
 ```
 
-`seismo-cc@seismo-cc` reads as `<plugin>@<marketplace>` — both are named `seismo-cc`. Once installed, everything activates on its own: the `impact-analysis` skill, the `impact-analyst` subagent, the `/seismo-cc:impact` command, the `seismo-impact` MCP server, and the `PreToolUse` guard. Nothing else to wire.
+`seismo-cc@seismo-cc` reads as `<plugin>@<marketplace>` — both are named `seismo-cc`. Once installed, everything activates on its own: the `impact-analysis` skill, the `impact-analyst` subagent, the three slash commands (`/seismo-cc:impact`, `/seismo-cc:tests`, `/seismo-cc:api-diff`), the `seismo-impact` MCP server, and the `PreToolUse` guard. Nothing else to wire.
 
 ### From GitHub (clone)
 
