@@ -22,6 +22,12 @@ node "${CLAUDE_PLUGIN_ROOT}/bin/impact.js" analyze --symbols <A,B> --short
 node "${CLAUDE_PLUGIN_ROOT}/bin/impact.js" analyze --diff --base origin/main --short
 ```
 
+### Which model to run the analyst on
+
+The default is set once, in the analyst's config: `model: sonnet` in `agents/impact-analyst.md`. The analysis is mechanical (run the deterministic CLI, read a handful of call sites, format ~15 lines), so a cheap model is the right default and it keeps the cost independent of the session model.
+
+The user overrides it at prompt time. When they explicitly ask for a model — "use haiku for the impact analysis", "run the analysis on opus", "cheapest model for this" — pass that model as the Task tool's `model` parameter when you launch `impact-analyst`. The prompt request wins; the `sonnet` default applies only when the user says nothing. Note the underlying analysis (`lib/analyze.js`) is deterministic Node with no LLM — the model choice only affects the thin subagent that runs the CLI and summarizes, never the numbers.
+
 ## When to trigger
 
 **Before writing**, as soon as the task touches existing code. Not after: a report read after the fact only serves to observe the damage.
