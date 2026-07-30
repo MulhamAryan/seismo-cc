@@ -499,7 +499,9 @@ It is not the precision of the parser, it is the noise threshold. A report that 
 
 ## Contributing
 
-PRs are welcome. The engine stays **dependency-free**: any contribution must run with Node 18+ without `npm install`. Run `./test/smoke.sh` before opening a PR.
+PRs are welcome. The engine stays **dependency-free**: any contribution must run with Node 18+ without `npm install`. Run `./test/smoke.sh` before opening a PR. See [CONTRIBUTING.md](CONTRIBUTING.md), and by participating you agree to the [Code of Conduct](CODE_OF_CONDUCT.md).
+
+To report a vulnerability, follow the [Security Policy](SECURITY.md) — do not open a public issue.
 
 ## License
 

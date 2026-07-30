@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Question or usage help
+    url: https://github.com/MulhamAryan/seismo-cc#readme
+    about: Read the README and docs/ first — installation, commands, and the honest limits are documented there.
+  - name: Security vulnerability
+    url: https://github.com/MulhamAryan/seismo-cc/security/policy
+    about: Do not open a public issue for a security problem — follow the security policy.
