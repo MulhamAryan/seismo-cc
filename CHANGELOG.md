@@ -6,6 +6,18 @@ follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.2.2] — 2026-07-31
+
+### Changed
+- **The gate is advisory by default.** The `PreToolUse` guard no longer refuses
+  an `Edit`/`Write` when no fresh report covers the file — by default it now
+  **warns and lets the edit through**. Blocking every edit until an analysis is
+  re-run (and re-blocking once the report passed `reportMaxAgeMinutes`) is exactly
+  the "cries wolf" behavior that makes a team disable the gate. New `gate` config
+  option: `advisory` (default) \| `blocking` (the previous strict behavior) \|
+  `off`. The CLI `gate` command is unchanged; the hook decides block-vs-warn from
+  the mode (`hooks/impact-gate.js`, `lib/config.js`).
+
 ## [0.2.1] — 2026-07-30
 
 ### Fixed

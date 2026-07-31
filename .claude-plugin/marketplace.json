@@ -3,14 +3,14 @@
   "owner": { "name": "Mulham ARYAN", "email": "moulhamo@gmail.com" },
   "metadata": {
     "description": "Impact analysis before modifying code, for Claude Code.",
-    "version": "0.2.1"
+    "version": "0.2.2"
   },
   "plugins": [
     {
       "name": "seismo-cc",
       "source": ".",
       "description": "Impact analysis before modifying code: callers, git historical coupling, public surface, irreversible operations, affected tests. Ships an analyst subagent, a skill, a /seismo-cc:impact command and a PreToolUse guard.",
-      "version": "0.2.1",
+      "version": "0.2.2",
       "category": "maintenance",
       "strict": true
     }

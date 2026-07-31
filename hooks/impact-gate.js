@@ -28,6 +28,18 @@ const { execFileSync } = require('child_process');
 const path = require('path');
 const fs = require('fs');
 
+// Gate mode is read from the target repo's impact.config.json (default
+// 'advisory'). Loaded lazily and defensively — a broken or missing config must
+// never make the hook throw.
+function gateMode(root) {
+  try {
+    const cfg = require('../lib/config').load(root);
+    return cfg.gate || 'advisory';
+  } catch {
+    return 'advisory';
+  }
+}
+
 // Guarded extensions. Touching a README does not warrant a guard: a gate that
 // fires on everything is a gate the team turns off.
 const GUARDED = ['.cs', '.php', '.kt', '.kts', '.ts', '.tsx', '.sql', '.razor', '.cshtml'];
@@ -55,6 +67,9 @@ process.stdin.on('end', () => {
   // Creating a brand-new file: nothing upstream to break.
   if (!fs.existsSync(target)) process.exit(0);
 
+  const mode = gateMode(cwd);
+  if (mode === 'off') process.exit(0);
+
   const cli = path.join(__dirname, '..', 'bin', 'impact.js');
   try {
     execFileSync(process.execPath, [cli, 'gate', '--root', cwd, '--file', target], {
@@ -63,8 +78,22 @@ process.stdin.on('end', () => {
     process.exit(0);
   } catch (e) {
     const reason = (e.stderr || e.stdout || e.message || '').trim();
-    // Wording matters: a hook block is often read as a user refusal, and the
-    // agent stops instead of fixing. Make it explicit this is automatic.
+
+    // Advisory (default): surface the missing/stale coverage but DO NOT block.
+    // A gate that refuses every edit until a fresh report exists is a gate the
+    // team disables within a week — so the default informs instead of stopping.
+    if (mode !== 'blocking') {
+      process.stderr.write(
+`impact advisory — no fresh analysis covers this file (edit not blocked).
+${reason}
+Consider running the impact analysis if this change is non-trivial. Set "gate": "blocking" in impact.config.json to enforce.
+`);
+      process.exit(0);
+    }
+
+    // Blocking mode: refuse the edit. Wording matters — a hook block is often
+    // read as a user refusal, and the agent stops instead of fixing. Make it
+    // explicit this is automatic.
     process.stderr.write(
 `AUTOMATIC GUARD — impact analysis missing or insufficient.
 This is not a user refusal. Continue your work autonomously.

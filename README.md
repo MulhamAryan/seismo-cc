@@ -7,7 +7,7 @@ Impact analysis before modification. The plugin provides the following component
 | `agents/impact-analyst.md` | **read-only subagent** — runs the analysis in its own context and returns ~15 lines |
 | `skills/impact-analysis/` | teaches the main agent **when** to delegate and **what to do** with the verdict |
 | `commands/*.md` | five slash commands for manual invocation — `/seismo-cc:impact` (full scope), `/seismo-cc:tests` (affected tests only), `/seismo-cc:api-diff` (breaking public-surface changes only), `/seismo-cc:brief` (business impact brief, reuse-vs-net-new, no code), `/seismo-cc:scope` (scope a not-yet-built feature from a spec) |
-| `hooks/hooks.json` | **`PreToolUse` guard** that refuses an `Edit`/`Write` without a fresh report |
+| `hooks/hooks.json` | **`PreToolUse` guard** — by default **advisory** (warns when no fresh report covers an `Edit`/`Write`, but lets it through); set `"gate": "blocking"` to enforce |
 | `lib/analyze.js` | **the engine** — `run(opts)` computes the impact `data` with **no side effects**; `persist(root, data)` writes the report. One code path, shared by every transport |
 | `bin/impact.js` | the **CLI transport** — a thin, zero-dependency Node wrapper that calls `run()` then `persist()` and formats stdout (`--json` / `--short` / md) |
 | `src/mcp-servers/seismo-impact/` | the **MCP transport** — a zero-dependency stdio JSON-RPC server over the *same* engine (see [MCP server](#mcp-server--seismo-impact)) |
@@ -372,7 +372,9 @@ It reads `SEISMO_ROOT` (default cwd) and `SEISMO_REVERT_DEPTH` (default 200), is
 
 ## The guard in action — `gate`
 
-The `PreToolUse` hook calls `gate --file <file>` before each `Edit`/`Write`/`MultiEdit`. Behavior:
+**Gate mode (`gate` in the config, default `advisory`).** The hook has three modes: `advisory` (default) warns when no fresh report covers the edited file **but never blocks the edit** — this avoids the "cries wolf on every edit" failure that makes a team turn the gate off; `blocking` refuses the edit (exit 2) until a fresh covering report exists (the strict behavior); `off` disables the hook. The CLI `gate` command itself always reports the issue (exit 1) — it is the hook that decides whether to block or just warn, based on the mode.
+
+The `PreToolUse` hook calls `gate --file <file>` before each `Edit`/`Write`/`MultiEdit`. In `blocking` mode:
 
 ```bash
 # File outside the analyzed scope → blocks
@@ -419,7 +421,7 @@ flowchart TD
 
 Each analysis records the SHA-1 fingerprint of each scope file's content in `latest.json` (`fileHashes`). The gate recomputes the fingerprint of the target file and refuses if it differs: a fresh report that describes an earlier version no longer lets a blind modification through.
 
-A **HIGH risk does not block** the write: it informs. Only **BLOCKING** stops it. The decision stays with the human, with no `--force`.
+In `blocking` mode, a **HIGH risk does not block** the write: it informs. Only **BLOCKING** stops it. The decision stays with the human, with no `--force`. In the default `advisory` mode, nothing is blocked — the same conditions are surfaced as a warning and the edit proceeds.
 
 ## Risk levels
 

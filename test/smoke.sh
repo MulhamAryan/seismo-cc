@@ -93,11 +93,21 @@ mkjson() { printf '{"cwd":"%s","hook_event_name":"PreToolUse","tool_name":"%s","
 
 mkjson "$API/src/Domain/Checkout.cs" Edit | node "$PLUGIN_ROOT/hooks/impact-gate.js" >/dev/null 2>&1
 rc_is "covered -> exit 0"             "0" "$?"
+
+# Default mode is advisory: an uncovered file is NOT blocked, only warned.
 ERR=$(mkjson "$API/app/Http/Controllers/PartnerController.php" Edit | node "$PLUGIN_ROOT/hooks/impact-gate.js" 2>&1 >/dev/null)
-rc_is "not covered -> exit 2"         "2" "$?"
+rc_is "advisory (default): not covered -> exit 0" "0" "$?"
+have "advisory message present"       "impact advisory"                    "$ERR"
+
+# Blocking mode (opt-in via config): the same edit is refused with exit 2.
+printf '{ "gate": "blocking" }\n' > "$API/impact.config.json"
+ERR=$(mkjson "$API/app/Http/Controllers/PartnerController.php" Edit | node "$PLUGIN_ROOT/hooks/impact-gate.js" 2>&1 >/dev/null)
+rc_is "blocking: not covered -> exit 2" "2" "$?"
 have "anti-stop message present"      "not a user refusal"                 "$ERR"
 # Separator-agnostic: the hook may print the path with / or \ depending on OS.
 have "plugin path resolved"           "bin.impact\.js"                     "$ERR"
+rm -f "$API/impact.config.json"
+
 mkjson "$API/README.md" Write | node "$PLUGIN_ROOT/hooks/impact-gate.js" >/dev/null 2>&1
 rc_is "unguarded extension -> exit 0" "0" "$?"
 mkjson "$API/src/Domain/New.cs" Write | node "$PLUGIN_ROOT/hooks/impact-gate.js" >/dev/null 2>&1
